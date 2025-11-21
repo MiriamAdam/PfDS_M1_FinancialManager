@@ -1,12 +1,28 @@
-from model import Transaction, Category, Storage
+from model import Transaction, Category, SqliteDb, Budget
 
 class FinancialController:
     def __init__(self):
-        self.storage = Storage()
+        self.storage = SqliteDb()
+        self.budgets: dict[Category, Budget] = {}
 
+    # methods for managing budgets:
+    def set_budget(self, category: Category, limit: float):
+        self.budgets[category] = Budget(category, limit)
+
+    def check_budget(self, category: Category) -> float:
+        if category in self.budgets:
+            return self.budgets[category].get_remaining()
+        else:
+            raise ValueError(f"Budget for category {category} is not set.")
+
+    # methods for managing transactions:
     def add_transaction(self, category: Category, description: str, amount: float):
-        transaction = Transaction(category, description, amount)
-        self.storage.save_transaction(transaction)
+        if category not in self.budgets or self.budgets[category].get_remaining() - amount >= 0:
+            transaction = Transaction(category, description, amount)
+            self.storage.save_transaction(transaction)
+            self.budgets[category].add_expense(amount)
+        else:
+            raise ValueError(f"Budget for category {category} is exceeded.")
 
     def get_transaction_by_date(self, exact_date=None, start_date=None, end_date=None):
         # gets all transactions based on optional date parameters

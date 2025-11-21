@@ -1,6 +1,6 @@
 import sqlite3
 
-class Storage:
+class SqliteDb:
     def __init__(self, db_name='finances.db'):
         self.db_name = db_name
         self._create_table_transactions()
