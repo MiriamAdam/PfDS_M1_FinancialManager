@@ -1,10 +1,10 @@
 from model import Category
 
 class Budget:
-    def __init__(self, category: Category, limit: float):
+    def __init__(self, category: Category, limit: float, spent=0.0):
         self.category = category
         self.limit = limit
-        self.spent = 0.0
+        self.spent = spent
 
     def add_expense(self, amount: float):
         self.spent += amount

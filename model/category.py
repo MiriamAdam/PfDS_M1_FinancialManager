@@ -2,10 +2,10 @@ from enum import Enum
 from typing import List
 
 class Category(Enum):
-    # Format: (name, description, is_income)
-    def __init__(self, name: str, description: List[str], is_income: bool):
+    # Format: (name, sub_category, is_income)
+    def __init__(self, name: str, sub_categories: List[str], is_income: bool):
         self.name = name
-        self.description = description
+        self.sub_categories = sub_categories
         self.is_income = is_income
 
     INCOME = ("Income", ['Job', 'Bonus', 'Part-time job', 'Child benefit', 'Housing benefit'], True)
