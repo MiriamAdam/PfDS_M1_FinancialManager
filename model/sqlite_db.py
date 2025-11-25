@@ -1,5 +1,8 @@
 import sqlite3
 
+from model import Transaction
+
+
 class SqliteDb:
     def __init__(self, db_name='finances.db'):
         """
@@ -20,8 +23,8 @@ class SqliteDb:
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 amount REAL NOT NULL,
-                sub_category TEXT NOT NULL,
                 category TEXT NOT NULL,
+                sub_category TEXT NOT NULL,
                 date TEXT NOT NULL
             )
         ''')
@@ -39,28 +42,32 @@ class SqliteDb:
             cursor = conn.cursor()
 
             cursor.execute('''
-                INSERT INTO transactions (amount, sup_category, category, date)
+                INSERT INTO transactions (amount, category, sub_category, date)
                 VALUES (?, ?, ?, ?)''',
-                           (transaction.amount, transaction.sub_category, transaction.category.name, transaction.date))
+                           (transaction.amount, transaction.category.name, transaction.sub_category, transaction.date))
 
             conn.commit()
 
     def load_all_transactions(self):
-        """Retrieves all transactions from the database."""
+        """
+        Retrieves all transactions from the database.
+        :return: List of Transaction instances"""
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
             cursor.execute('''
             SELECT * FROM transactions''')
 
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+
+        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
     def load_transactions_by_exact_date(self, date):
         """
         Retrieves all transactions from the database by the given date.
 
         :param date: date of the transaction
-        :return: a list of transactions with the given date
+        :return: a list of transactions from the given date
         """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
@@ -69,7 +76,9 @@ class SqliteDb:
             SELECT * FROM transactions WHERE date=?''',
                            (date,))
 
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+
+        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
     def load_transactions_by_date_range(self, start_date, end_date):
         """
@@ -86,7 +95,9 @@ class SqliteDb:
             SELECT * FROM transactions WHERE date>=? AND date<=?''',
                            (start_date,end_date))
 
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+
+        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
     def load_transactions_by_from_date(self, start_date):
         """
@@ -99,23 +110,39 @@ class SqliteDb:
             cursor = conn.cursor()
 
             cursor.execute('''
-            SELECT * FROM transactions WHERE date=?''',
+            SELECT * FROM transactions WHERE date>=?''',
                            (start_date,))
 
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+
+        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
     def load_transactions_by_until_date(self, end_date):
+        """
+        Retrieves all transactions from the database upto the given date.
+
+        :param end_date: end date of a timespan
+        :return: a list of transactions upto the given date
+        """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
             cursor.execute('''
-            SELECT * FROM transactions WHERE date=?''',
+            SELECT * FROM transactions WHERE date<=?''',
                            (end_date,))
 
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+
+        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
 
     def load_transactions_by_category(self, category):
+        """
+        Retrieves all transactions from the database by category.
+
+        :param category: category of the transactions
+        :return: a list of transactions of the selected category
+        """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
@@ -123,9 +150,17 @@ class SqliteDb:
                 SELECT * FROM transactions WHERE category = ?''',
                            (category,))
 
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+
+        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
     def load_transactions_by_sub_category(self, sub_category):
+        """
+        Retrieves all transactions from the database by sub category.
+
+        :param sub_category: sub category of the transactions
+        :return: a list of transactions of the selected sub category
+        """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
@@ -133,4 +168,6 @@ class SqliteDb:
             SELECT * FROM transactions WHERE sub_category = ?''',
                            (sub_category,))
 
-            return cursor.fetchall()
+            rows = cursor.fetchall()
+
+        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]

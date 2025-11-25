@@ -1,6 +1,6 @@
 from model import Transaction, Category, SqliteDb, Budget
 
-class FinancialController:
+class FinanceController:
     """
     Joins all models to use the Financial Manager with ui.
     """
@@ -60,7 +60,15 @@ class FinancialController:
         else:
             raise ValueError(f"Budget for category {category} is exceeded.")
 
-    def get_transaction_by_date(self, exact_date=None, start_date=None, end_date=None):
+    def get_all_transactions(self):
+        """
+        Returns all transactions in the database.
+
+        :return: a list of all transactions in the database
+        """
+        return self.storage.load_all_transactions()
+
+    def get_transactions_by_date(self, exact_date=None, start_date=None, end_date=None):
         """
         Get transactions based on optional date filters.
         If no parameters are provided, all transactions are returned.
