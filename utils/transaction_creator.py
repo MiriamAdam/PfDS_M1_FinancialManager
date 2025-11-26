@@ -29,5 +29,5 @@ class TransactionCreator:
             date = (f"2025-{random.randint(1, 12):02d}-{random.randint(1, 28):02d} "
                     f"{random.randint(0, 23):02d}:{random.randint(0, 59):02d}:{random.randint(0, 59):02d}.000000")
 
-            transaction = Transaction(amount, category, sub_category,  date)
+            transaction = Transaction(amount, category.category_name, sub_category,  date)
             self.storage.save_transaction(transaction)

@@ -40,7 +40,7 @@ class FinanceController:
         if category in self.budgets:
             return self.budgets[category].get_remaining()
         else:
-            raise ValueError(f"Budget for category {category} is not set.")
+            raise ValueError(f"Budget for category {category.category_name} is not set.")
 
     def add_transaction(self, category: Category, sub_category: str, amount: float):
         """
@@ -53,12 +53,12 @@ class FinanceController:
         :param amount: the transaction amount
         """
         if category not in self.budgets or self.budgets[category].get_remaining() - amount >= 0:
-            transaction = Transaction(category, sub_category, amount)
+            transaction = Transaction(category.category_name, sub_category, amount)
             self.storage.save_transaction(transaction)
             if category in self.budgets:
                 self.budgets[category].add_expense(amount)
         else:
-            raise ValueError(f"Budget for category {category} is exceeded.")
+            raise ValueError(f"Budget for category {category.category_name} is exceeded.")
 
     def get_all_transactions(self):
         """
@@ -93,14 +93,14 @@ class FinanceController:
         else:
             return self.storage.load_all_transactions()
 
-    def get_transactions_by_category(self, category):
+    def get_transactions_by_category(self, category_name):
         """
         Gets all transactions for a given category.
 
-        :param category: category of the transactions
+        :param category_name: category of the transactions
         :return: list of transactions in the specified category
         """
-        return self.storage.load_transactions_by_category(category)
+        return self.storage.load_transactions_by_category(category_name)
 
     def get_transactions_by_sub_category(self, sub_category):
         """

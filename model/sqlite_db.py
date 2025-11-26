@@ -23,7 +23,7 @@ class SqliteDb:
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 amount REAL NOT NULL,
-                category TEXT NOT NULL,
+                category_name TEXT NOT NULL,
                 sub_category TEXT NOT NULL,
                 date TEXT NOT NULL
             )
@@ -42,9 +42,9 @@ class SqliteDb:
             cursor = conn.cursor()
 
             cursor.execute('''
-                INSERT INTO transactions (amount, category, sub_category, date)
+                INSERT INTO transactions (amount, category_name, sub_category, date)
                 VALUES (?, ?, ?, ?)''',
-                           (transaction.amount, transaction.category.name, transaction.sub_category, transaction.date))
+                           (transaction.amount, transaction.category_name, transaction.sub_category, transaction.date))
 
             conn.commit()
 
@@ -136,19 +136,19 @@ class SqliteDb:
         return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
 
-    def load_transactions_by_category(self, category):
+    def load_transactions_by_category(self, category_name):
         """
         Retrieves all transactions from the database by category.
 
-        :param category: category of the transactions
+        :param category_name: name of the category of the transactions
         :return: a list of transactions of the selected category
         """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
             cursor.execute('''
-                SELECT * FROM transactions WHERE category = ?''',
-                           (category,))
+                SELECT * FROM transactions WHERE category_name = ?''',
+                           (category_name,))
 
             rows = cursor.fetchall()
 

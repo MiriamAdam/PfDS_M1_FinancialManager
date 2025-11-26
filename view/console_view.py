@@ -39,6 +39,13 @@ class ConsoleView:
 
             if transactions:
                 for transaction in transactions:
-                    print(f'Category: {transaction.category}, Type: {transaction.sub_category}, Amount: {transaction.amount}, Date: {transaction.date}\n')
+                    print(f'Category: {transaction.category_name}, Type: {transaction.sub_category}, Amount: {transaction.amount}€, Date: {transaction.date}\n')
             else:
                 print('No transactions found')
+
+        elif first_choice == '2':
+            category = input('Enter a category: ')
+            #category_name = category.from_name()
+            sub_category = input('Enter a sub-category: ')
+            amount = input('Enter amount: ')
+            self.fc.add_transaction(category, sub_category, amount)
