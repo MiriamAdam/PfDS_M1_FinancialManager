@@ -42,23 +42,24 @@ class FinanceController:
         else:
             raise ValueError(f"Budget for category {category.category_name} is not set.")
 
-    def add_transaction(self, category: Category, sub_category: str, amount: float):
+    def add_transaction(self, amount: float, category_name: str, sub_category: str):
         """
         Adds a transaction to the database.
         Updates the budget for the category if set.
         Raises ValueError if the expenditure would exceed the budget.
 
-        :param category: the category of the transaction
+        :param category_name: the category of the transaction
         :param sub_category: sub_category of the transaction
         :param amount: the transaction amount
         """
+        category = Category.from_category(category_name)
         if category not in self.budgets or self.budgets[category].get_remaining() - amount >= 0:
-            transaction = Transaction(category.category_name, sub_category, amount)
+            transaction = Transaction(amount, category_name, sub_category)
             self.storage.save_transaction(transaction)
             if category in self.budgets:
                 self.budgets[category].add_expense(amount)
         else:
-            raise ValueError(f"Budget for category {category.category_name} is exceeded.")
+            raise ValueError(f"Budget for category {category_name} is exceeded.")
 
     def get_all_transactions(self):
         """
