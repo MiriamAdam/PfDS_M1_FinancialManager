@@ -9,6 +9,7 @@ class ConsoleView:
         print('Start menu')
         print('Enter "1" to show transactions')
         print('Enter "2" to add a transaction')
+        print('Enter "3" to add a budget for a category ')
 
     def print_show_transactions_menu(self):
         print('Enter "1" to show all transactions')
@@ -81,3 +82,12 @@ class ConsoleView:
 
         elif first_choice == '2':
             self.add_transaction()
+
+        elif first_choice == '3':
+            category_name = input('Enter a category: ')
+            limit = input('Enter a limit: ')
+            limit_float = float(limit)
+            if self.fc.get_transactions_by_category(category_name):
+                self.fc.set_budget(category_name, limit_float)
+            else:
+                raise ValueError('No budget set for this category')

@@ -8,14 +8,32 @@ class FinanceController:
         self.storage = SqliteDb()
         self.budgets: dict[Category, Budget] = {}
 
-    def set_budget(self, category: Category, limit: float):
+    def _load_budgets_from_storage(self):
+        """Load all budgets from the database."""
+        budget_data = self.storage_load_all_budgets()
+        for category_name, limit in budget_data.items():
+            category = Category.from_category_as_string(category_name)
+            if category:
+                transactions = self.get_transactions_by_category(category_name)
+                spent = sum(t.amount for t in transactions)
+                self.budgets[category] = Budget(category, limit, spent)
+
+    def set_budget(self, category_name: str, limit: float):
         """
         Sets the budget for a category with the given limit.
 
-        :param category: the category of the budget
+        :param category_name: the category of the budget
         :param limit: the limit of the budget
         """
+        category = Category.from_category_as_string(category_name)
         self.budgets[category] = Budget(category, limit)
+
+    def check_if_budget_is_set(self, category_name: str):
+        """
+        Checks if a budget is set for the given category.
+        """
+        category = Category.from_category_as_string(category_name)
+        return self.budgets[category]
 
     def set_budget_with_already_incurred_expenses(self, category: Category, limit: float):
         """
@@ -52,9 +70,9 @@ class FinanceController:
         :param sub_category: sub_category of the transaction
         :param amount: the transaction amount
         """
-        category = Category.from_category(category_name)
+        category = Category.from_category_as_string(category_name)
         if category not in self.budgets or self.budgets[category].get_remaining() - amount >= 0:
-            transaction = Transaction(amount, category_name, sub_category)
+            transaction = Transaction(round(amount, 2), category_name, sub_category)
             self.storage.save_transaction(transaction)
             if category in self.budgets:
                 self.budgets[category].add_expense(amount)

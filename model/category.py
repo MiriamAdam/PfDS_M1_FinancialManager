@@ -28,10 +28,10 @@ class Category(Enum):
         return [cat.category_name for cat in cls]
 
     @classmethod
-    def from_category(cls, category: str):
+    def from_category_as_string(cls, category_name: str):
         # returns category from category name
         for cat in cls:
-            if cat.category_name == category:
+            if cat.category_name == category_name:
                 return cat
         return None
 
