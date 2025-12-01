@@ -115,7 +115,7 @@ class SqliteDb:
 
             rows = cursor.fetchall()
 
-        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
+        return [Transaction(row[1],row[2], row[3], row[4]) for row in rows]
 
     def load_transactions_by_until_date(self, end_date):
         """
@@ -199,11 +199,11 @@ class SqliteDb:
     def load_all_budgets(self):
         """
         Retrieves all budgets from the database.
-        :return: Dicitonary with category_name as key and limit as value
+        :return: Dictionary with category_name as key and limit as value
         """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT category_name, limit FROM budgets')
+            cursor.execute('SELECT category_name limit FROM budgets')
             rows = cursor.fetchall()
         return {row[0]: row[1] for row in rows}
 
@@ -217,3 +217,11 @@ class SqliteDb:
             cursor.execute('SELECT limit FROM budgets WHERE category_name = ?', (category_name,))
             row = cursor.fetchone()
         return row[0] if row else None
+
+    def delete_budget(self, category_name: str):
+        """Deletes a budget from the database."""
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+            DELETE FROM budgets WHERE category_name = ?''', category_name)
+            conn.commit()

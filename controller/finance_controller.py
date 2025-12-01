@@ -9,8 +9,8 @@ class FinanceController:
         self.budgets: dict[Category, Budget] = {}
 
     def _load_budgets_from_storage(self):
-        """Load all budgets from the database."""
-        budget_data = self.storage_load_all_budgets()
+        """Loads all budgets from the database and sums up all amounts already spent for a budget."""
+        budget_data = self.storage.load_all_budgets()
         for category_name, limit in budget_data.items():
             category = Category.from_category_as_string(category_name)
             if category:
@@ -59,6 +59,13 @@ class FinanceController:
             return self.budgets[category].get_remaining()
         else:
             raise ValueError(f"Budget for category {category.category_name} is not set.")
+
+    def delete_budget(self, category: Category):
+        """Deletes a budget from self.budgets and database"""
+        for category in self.budgets:
+            del self.budgets[category]
+            self.storage.delete_budget(category.category_name)
+
 
     def add_transaction(self, amount: float, category_name: str, sub_category: str):
         """
