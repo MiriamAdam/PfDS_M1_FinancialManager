@@ -6,7 +6,10 @@ export default function useTransactions() {
 
     useEffect(() => {
         fetchTransactions()
-            .then(data => setTransactions(data))
+            .then(data => {
+                console.log(data);
+                setTransactions(data)
+            })
             .catch(err => console.error(err));
     }, []);
 
