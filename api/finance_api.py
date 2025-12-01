@@ -1,12 +1,99 @@
-from flask import Flask, request, jsonify
+import io
+import sqlite3
+from datetime import datetime
+
+import pandas as pd
+from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
+from matplotlib import pyplot as plt
+import matplotlib.dates as mdates
+from datetime import timedelta
+
+
 from controller.finance_controller import FinanceController
 from model.category import Category
-
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type"]
+    }
+})
+
 controller = FinanceController()
 
+DATABASE = 'finances.db'
+
+@app.route('/api/chart/monthly-summary', methods=['GET'])
+def get_monthly_summary_chart():
+    """Get account balance over last 30 days"""
+    try:
+        db = sqlite3.connect(DATABASE)
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+
+        query = """
+            SELECT date, amount
+            FROM transactions
+            WHERE date <= ?
+            ORDER BY date
+        """
+
+        df = pd.read_sql_query(query, db,
+                              params=(end_date.strftime('%Y-%m-%d'),))
+        db.close()
+
+        df['date'] = pd.to_datetime(df['date']).dt.normalize()
+
+        df['balance'] = df['amount'].cumsum()
+
+        daily_balance = df.groupby('date')['balance'].last()
+
+        date_range = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
+
+        daily_balance = daily_balance.reindex(date_range, method='ffill')
+
+        daily_balance = daily_balance.fillna(0)
+
+        plt.figure(figsize=(12, 6))
+        plt.plot(date_range, daily_balance,
+                marker='o', linewidth=2.5, markersize=5,
+                color='#2196F3', label='Balance')
+
+        plt.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+
+        plt.title('Account Balance - Last 30 Days',
+                 fontsize=16, fontweight='bold', pad=20)
+        plt.xlabel('Date', fontsize=12)
+        plt.ylabel('Balance (€)', fontsize=12)
+        plt.legend(loc='upper left', fontsize=11)
+        plt.grid(True, alpha=0.3, linestyle='--')
+
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
+        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=5))
+        plt.xticks(rotation=45, ha='right')
+
+        plt.tight_layout()
+
+        img = io.BytesIO()
+        plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
+        img.seek(0)
+        plt.close()
+
+        response = make_response(send_file(img, mimetype='image/png'))
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+        response.headers['Access-Control-Allow-Methods'] = 'GET'
+        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        return response
+
+    except Exception as e:
+        print(f"Chart error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 # Transaction Management
 @app.route('/api/transactions', methods=['GET'])

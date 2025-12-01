@@ -5,7 +5,7 @@ export default function Layout({children}) {
         <div className="grid grid-rows-[auto-1fr-auot] grid-cols-[auto-1fr] min-h-screen gap-4">
             <div className="col-span-2" >Header</div>
             <div className="">Menu</div>
-            <div className="">{children}</div>
+            <div className="bg-blue-50">{children}</div>
             <div className="col-span-2 ">Footer</div>
         </div>
     )
