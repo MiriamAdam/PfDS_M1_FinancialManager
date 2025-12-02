@@ -1,4 +1,4 @@
-from controller import FinanceController
+from backend.controller import FinanceController
 
 class ConsoleView:
 

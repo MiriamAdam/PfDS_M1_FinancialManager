@@ -46,7 +46,7 @@ export default function Home() {
                         <span>
                             {new Date(t.date).toLocaleDateString('de-DE', {
                                 day: 'numeric',
-                                month: 'long'
+                                month: 'short'
                             })}
                         </span>
                        <span className="font-bold pl-5 w-30 text-right">{t.amount.toFixed(2)} €</span>

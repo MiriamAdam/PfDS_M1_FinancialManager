@@ -1,4 +1,4 @@
-from model import Category
+from backend.model import Category
 
 class Budget:
     """Defines a budget for a category."""

@@ -1,6 +1,6 @@
 import sqlite3
 
-from model import Transaction
+from backend.model import Transaction
 
 
 class SqliteDb:
@@ -56,7 +56,7 @@ class SqliteDb:
             cursor = conn.cursor()
 
             cursor.execute('''
-            SELECT * FROM transactions''')
+            SELECT * FROM transactions ORDER BY date DESC''')
 
             rows = cursor.fetchall()
 

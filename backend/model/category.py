@@ -23,9 +23,9 @@ class Category(Enum):
     OTHER = ("Other", ['Clothes', 'Shoes', 'Gift', 'Holiday', 'Electronics'], False)
 
     @classmethod
-    def get_all_categories(cls) -> List[str]:
-        # returns all category names as list
-        return [cat.category_name for cat in cls]
+    def get_all_categories(cls) -> List[object]:
+        # returns all categories
+        return [cat for cat in cls]
 
     @classmethod
     def from_category_as_string(cls, category_name: str):

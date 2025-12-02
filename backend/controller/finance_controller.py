@@ -1,4 +1,4 @@
-from model import Transaction, Category, SqliteDb, Budget
+from backend.model import Transaction, Category, SqliteDb, Budget
 
 class FinanceController:
     """

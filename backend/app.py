@@ -1,4 +1,4 @@
-from api.finance_api import app
+from backend.api.finance_api import app
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

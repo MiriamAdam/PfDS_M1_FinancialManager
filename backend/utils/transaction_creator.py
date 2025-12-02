@@ -1,4 +1,4 @@
-from model import Transaction, Category, SqliteDb
+from backend.model import Transaction, Category, SqliteDb
 import random
 
 class TransactionCreator:

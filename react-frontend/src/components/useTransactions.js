@@ -4,11 +4,15 @@ import {fetchTransactions} from "../services/api.js";
 export default function useTransactions() {
     const [transactions, setTransactions] = useState([]);
 
+    const loadTransactions = () => {
+        fetch("http://localhost:5000/api/transactions")
+            .then(res => res.json())
+            .then(data => setTransactions(data));
+    };
+
     useEffect(() => {
-        fetchTransactions()
-            .then(data => setTransactions(data))
-            .catch(err => console.error(err));
+        loadTransactions();
     }, []);
 
-    return transactions;
+    return { transactions, reload: loadTransactions };
 }

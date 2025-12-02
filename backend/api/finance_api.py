@@ -10,8 +10,8 @@ import matplotlib.dates as mdates
 from datetime import timedelta
 
 
-from controller.finance_controller import FinanceController
-from model.category import Category
+from backend.controller.finance_controller import FinanceController
+from backend.model.category import Category
 app = Flask(__name__)
 CORS(app, resources={
     r"/api/*": {
@@ -96,6 +96,18 @@ def get_monthly_summary_chart():
         return jsonify({'error': str(e)}), 500
 
 # Transaction Management
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
+    data = [
+        {
+            "category_name": cat.category_name,
+            "sub_categories": cat.sub_categories,
+            "is_income": cat.is_income
+        }
+        for cat in Category
+    ]
+    return jsonify(data)
+
 @app.route('/api/transactions', methods=['GET'])
 def get_transactions():
     """Get all transactions, optionally filtered by category"""
@@ -122,7 +134,7 @@ def add_transaction():
     try:
         data = request.json
         amount = float(data['amount'])
-        category_name = data['category_name']
+        category_name = data['category']
         sub_category = data['sub_category']
 
         controller.add_transaction(amount, category_name, sub_category)
@@ -133,7 +145,6 @@ def add_transaction():
         return jsonify({'error': f'Missing field: {str(e)}'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/transactions/by-date', methods=['GET'])
 def get_transactions_by_date():

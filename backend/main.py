@@ -1,5 +1,5 @@
-from utils.db_creator import DbCreator
-from view import ConsoleView
+from backend.utils import DbCreator
+from backend.view import ConsoleView
 
 def main():
     creator = DbCreator()
