@@ -191,7 +191,7 @@ class SqliteDb:
             cursor = conn.cursor()
 
             cursor.execute('''
-                   INSERT OR REPLACE INTO budgets (category_name, limit)
+                   INSERT OR REPLACE INTO budgets (category_name, "limit")
                    VALUES (?, ?)''',
                    (category_name, limit))
             conn.commit()

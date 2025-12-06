@@ -9,8 +9,8 @@ from matplotlib import pyplot as plt
 import matplotlib.dates as mdates
 from datetime import timedelta
 
-
-from backend.controller.finance_controller import FinanceController
+from backend.services import transactions_service
+from backend.services import budgets_service
 from backend.model.category import Category
 app = Flask(__name__)
 CORS(app, resources={
@@ -21,40 +21,31 @@ CORS(app, resources={
     }
 })
 
-controller = FinanceController()
-
 DATABASE = 'finances.db'
 
 @app.route('/api/chart/monthly-summary', methods=['GET'])
 def get_monthly_summary_chart():
-    """Get account balance over last 30 days"""
+    """Get account balance chart over last 30 days"""
     try:
-        db = sqlite3.connect(DATABASE)
-
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30)
 
-        query = """
-            SELECT date, amount
-            FROM transactions
-            WHERE date <= ?
-            ORDER BY date
-        """
+        previous_transactions = transactions_service.get_transactions_by_date(end_date=start_date)
+        initial_balance = sum(t.amount for t in previous_transactions)
 
-        df = pd.read_sql_query(query, db,
-                              params=(end_date.strftime('%Y-%m-%d'),))
-        db.close()
+        transactions_last_30_days = transactions_service.get_transactions_by_date(start_date=start_date, end_date=end_date)
 
-        df['date'] = pd.to_datetime(df['date']).dt.normalize()
+        df=pd.DataFrame([{
+            'date': t.date,
+            'amount': t.amount
+        } for t in transactions_last_30_days])
 
-        df['balance'] = df['amount'].cumsum()
-
+        df['date'] = pd.to_datetime(df['date'],format='ISO8601').dt.normalize()
+        df['balance'] = df['amount'].cumsum() + initial_balance
         daily_balance = df.groupby('date')['balance'].last()
-
         date_range = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
-
         daily_balance = daily_balance.reindex(date_range, method='ffill')
-
+        daily_balance.iloc[0] = initial_balance
         daily_balance = daily_balance.fillna(0)
 
         plt.figure(figsize=(12, 6))
@@ -68,14 +59,12 @@ def get_monthly_summary_chart():
                  fontsize=16, fontweight='bold', pad=20)
         plt.xlabel('Date', fontsize=12)
         plt.ylabel('Balance (€)', fontsize=12)
-        plt.legend(loc='upper left', fontsize=11)
         plt.grid(True, alpha=0.3, linestyle='--')
 
         plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
-        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=5))
+        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))
         plt.xticks(rotation=45, ha='right')
 
-        plt.tight_layout()
 
         img = io.BytesIO()
         plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
@@ -87,6 +76,7 @@ def get_monthly_summary_chart():
         response.headers['Access-Control-Allow-Methods'] = 'GET'
         response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+
         return response
 
     except Exception as e:
@@ -114,9 +104,9 @@ def get_transactions():
     category = request.args.get('category')
     try:
         if category:
-            transactions = controller.get_transactions_by_category(category)
+            transactions = transactions_service.get_transactions_by_category(category)
         else:
-            transactions = controller.get_all_transactions()
+            transactions = transactions_service.get_all_transactions()
 
         return jsonify([{
             'amount': t.amount,
@@ -137,14 +127,15 @@ def add_transaction():
         category_name = data['category']
         sub_category = data['sub_category']
 
-        controller.add_transaction(amount, category_name, sub_category)
+        transactions_service.add_transaction(amount, category_name, sub_category)
         return jsonify({'message': 'Transaction added successfully'}), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except KeyError as e:
         return jsonify({'error': f'Missing field: {str(e)}'}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print("UNCAUGHT ERROR:", e)
+        raise
 
 @app.route('/api/transactions/by-date', methods=['GET'])
 def get_transactions_by_date():
@@ -154,7 +145,7 @@ def get_transactions_by_date():
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
 
-        transactions = controller.get_transactions_by_date(
+        transactions = transactions_service.get_transactions_by_date(
             exact_date=exact_date,
             start_date=start_date,
             end_date=end_date
@@ -178,7 +169,7 @@ def get_transactions_by_sub_cat():
         if not sub_category:
             return jsonify({'error': 'sub_category parameter required'}), 400
 
-        transactions = controller.get_transactions_by_sub_category(sub_category)
+        transactions = transactions_service.get_transactions_by_sub_category(sub_category)
         return jsonify([{
             'amount': t.amount,
             'category_name': t.category_name,
@@ -199,8 +190,7 @@ def set_budget():
         category_name = data['category_name']
         limit = float(data['limit'])
 
-        controller.set_budget(category_name, limit)
-        controller.storage.save_budget(category_name, limit)
+        budgets_service.set_budget(category_name, limit)
 
         return jsonify({'message': f'Budget set for {category_name}'}), 201
     except KeyError as e:
@@ -211,24 +201,23 @@ def set_budget():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/budgets/<category_name>', methods=['GET'])
-def get_budget_status(category_name):
-    """Get budget status for a category"""
+@app.route('/api/budgets', methods=['GET'])
+def get_all_budgets():
+    """Get all budgets."""
     try:
-        remaining = controller.check_budget(category_name)
-        budget = controller.budgets.get(Category.from_category_as_string(category_name))
+        result = []
 
-        if not budget:
-            return jsonify({'error': f'No budget set for {category_name}'}), 404
+        for category, budget in budgets_service.budgets.items():
+            result.append({
+                'category_name': category.category_name,
+                'limit': budget.limit,
+                'spent': budget.spent,
+                'remaining': budget.get_remaining()
+            })
 
-        return jsonify({
-            'category_name': category_name,
-            'limit': budget.limit,
-            'spent': budget.spent,
-            'remaining': remaining,
-            'percentage': round((budget.spent / budget.limit * 100) if budget.limit > 0 else 0, 2)
-        }), 200
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 404
+        return jsonify(result), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+

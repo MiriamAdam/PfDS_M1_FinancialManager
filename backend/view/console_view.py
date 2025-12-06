@@ -1,9 +1,9 @@
-from backend.controller import FinanceController
+from backend.controller import TransactionsController
 
 class ConsoleView:
 
     def __init__(self):
-        self.fc = FinanceController()
+        self.fc = TransactionsController()
 
     def print_start_menu(self):
         print('Start menu')

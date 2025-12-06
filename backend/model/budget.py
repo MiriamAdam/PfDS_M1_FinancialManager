@@ -12,3 +12,6 @@ class Budget:
 
     def get_remaining(self) -> float:
         return self.limit - self.spent
+
+    def reset_spent(self):
+        self.spent = 0.0
