@@ -2,6 +2,15 @@ import sqlite3, random
 from datetime import datetime, date
 
 
+def add_random_time(dt):
+    return dt.replace(
+        hour=random.randint(0, 23),
+        minute=random.randint(0, 59),
+        second=random.randint(0, 59),
+        microsecond=random.randint(0, 999999)
+    ).strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
 class DbCreator:
     """Create new table 'transactions' with incomes/home and at least 20 random entries per month for other categories"""
     def __init__(self):
@@ -50,24 +59,24 @@ class DbCreator:
 
         while self.current <= self.end:
             y, m = self.current.year, self.current.month
-            first_of_month = datetime(y, m, 1).strftime("%Y-%m-%d")
+            first_of_month = datetime(y, m, 1)
             # INCOME entries on 1st
-            self.add(2900, "Income", "Job", first_of_month)
-            self.add(500, "Income", "Child benefit", first_of_month)
-            self.add(200, "Income", "Housing benefit", first_of_month)
+            self.add(2900, "Income", "Job", add_random_time(first_of_month))
+            self.add(500, "Income", "Child benefit", add_random_time(first_of_month))
+            self.add(200, "Income", "Housing benefit", add_random_time(first_of_month))
             # part-time sometimes
             if random.random() < 0.35:
-                self.add(random.uniform(100, 700), "Income", "Part-time job", first_of_month)
+                self.add(random.uniform(100, 700), "Income", "Part-time job", add_random_time(first_of_month))
             # bonus in december
             if m == 12:
-                self.add(1000, "Income", "Bonus", first_of_month)
+                self.add(1000, "Income", "Bonus", add_random_time(first_of_month))
             # HOME monthly at beginning
-            self.add(-1200, "Home", "Rent", first_of_month)
-            self.add(-random.uniform(50,80), "Home", "Electricity", first_of_month)
-            self.add(-random.uniform(30,60), "Home", "Gas", first_of_month)
-            self.add(-18.36, "Home", "GEZ", first_of_month)
-            self.add(-40, "Home", "Internet", first_of_month)
-            self.add(-random.uniform(40,90), "Home", "Insurance", first_of_month)
+            self.add(-1200, "Home", "Rent", add_random_time(first_of_month))
+            self.add(-random.uniform(50,80), "Home", "Electricity", add_random_time(first_of_month))
+            self.add(-random.uniform(30,60), "Home", "Gas", add_random_time(first_of_month))
+            self.add(-18.36, "Home", "GEZ", add_random_time(first_of_month))
+            self.add(-40, "Home", "Internet", add_random_time(first_of_month))
+            self.add(-random.uniform(40,90), "Home", "Insurance", add_random_time(first_of_month))
             # OTHER categories: at least 20 entries per month (distributed across categories)
             num_other = random.randint(20, 40)  # at least 20, up to 40 for variability
             other_keys = [k for k in categories.keys() if k not in ("Income", "Home")]
@@ -93,7 +102,7 @@ class DbCreator:
                     amt = -random.uniform(5, 400)
                 # random day in month (1-28 to be safe)
                 day = random.randint(1,28)
-                date_date = datetime(y, m, day).strftime("%Y-%m-%d")
+                date_date = add_random_time(datetime(y, m, day))
                 date_check = date(y, m, day)
                 if date_check <= self.end:
                     self.add(amt, cat, sub, date_date)

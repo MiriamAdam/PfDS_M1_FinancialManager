@@ -1,5 +1,4 @@
 import io
-import sqlite3
 from datetime import datetime
 
 import pandas as pd
@@ -12,6 +11,8 @@ from datetime import timedelta
 from backend.services import transactions_service
 from backend.services import budgets_service
 from backend.model.category import Category
+from backend.services import db_creator
+
 app = Flask(__name__)
 CORS(app, resources={
     r"/api/*": {

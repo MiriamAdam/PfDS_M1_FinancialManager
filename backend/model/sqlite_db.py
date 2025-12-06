@@ -203,20 +203,9 @@ class SqliteDb:
         """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT category_name limit FROM budgets')
+            cursor.execute('SELECT category_name, "limit" FROM budgets')
             rows = cursor.fetchall()
         return {row[0]: row[1] for row in rows}
-
-    def load_budget(self, category_name: str):
-        """
-        Retrieves a specific budget by category_name.
-        :return: The budget limit or None if not found.
-        """
-        with sqlite3.connect(self.db_name) as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT limit FROM budgets WHERE category_name = ?', (category_name,))
-            row = cursor.fetchone()
-        return row[0] if row else None
 
     def delete_budget(self, category_name: str):
         """Deletes a budget from the database."""

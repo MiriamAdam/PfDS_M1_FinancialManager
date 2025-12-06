@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from backend.model import SqliteDb, Category, Budget
 
 
@@ -6,16 +8,22 @@ class BudgetsController:
     def __init__(self):
         self.storage = SqliteDb()
         self.budgets: dict[Category, Budget] = {}
+        self._load_budgets_from_storage()
 
     def _load_budgets_from_storage(self):
-        """Loads all budgets from the database and sums up all amounts already spent for a budget."""
-        budget_data = self.storage.load_all_budgets()
-        for category_name, limit in budget_data.items():
+        """Loads all budgets from the database.
+        Sums up all amounts already spent for a budget in current month. """
+        for category_name, limit in self.storage.load_all_budgets().items():
             category = Category.from_category_as_string(category_name)
             if category:
-                transactions = self.storage.load_transactions_by_category(category_name)
+                transactions = []
+                for t in self.storage.load_transactions_by_category(category_name):
+                    dt = datetime.strptime(t.date, '%Y-%m-%d %H:%M:%S.%f')
+                    if dt.year == datetime.now().year and dt.month == datetime.now().month:
+                        transactions.append(t)
                 spent = sum(t.amount for t in transactions)
                 self.budgets[category] = Budget(category, limit, spent)
+                print(transactions)
 
     def set_budget(self, category_name: str, limit: float):
         """
