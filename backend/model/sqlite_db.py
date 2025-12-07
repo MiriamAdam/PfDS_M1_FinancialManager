@@ -99,19 +99,25 @@ class SqliteDb:
 
         return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
-    def load_transactions_by_from_date(self, start_date):
+    def load_transactions_by_from_date(self, start_date, category_name=None):
         """
         Retrieves all transactions from the database from the given date onward.
+        Optional: Filters by category if category_name is given.
 
         :param start_date: start date of a timespan
+        :param category_name: name of the category to filter
         :return: a list of transactions starting from the given date onward
         """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
-            cursor.execute('''
-            SELECT * FROM transactions WHERE date>=?''',
-                           (start_date,))
+            if category_name:
+                cursor.execute('''
+                SELECT * FROM transactions WHERE date >= ? AND category_name = ?''', (start_date, category_name))
+            else:
+                cursor.execute('''
+                SELECT * FROM transactions WHERE date>=?''',
+                               (start_date,))
 
             rows = cursor.fetchall()
 
@@ -212,5 +218,5 @@ class SqliteDb:
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-            DELETE FROM budgets WHERE category_name = ?''', category_name)
+            DELETE FROM budgets WHERE category_name = ?''', (category_name, ))
             conn.commit()

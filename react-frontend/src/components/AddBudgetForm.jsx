@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import Toast from "./Toast.jsx";
 
 export default function AddBudgetForm({onSuccess}) {
     const [categories, setCategories] = useState([]);
@@ -6,6 +7,9 @@ export default function AddBudgetForm({onSuccess}) {
         category_name: '',
         limit: ''
     });
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("error");
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         fetch('http://localhost:5000/api/categories')
@@ -30,15 +34,27 @@ export default function AddBudgetForm({onSuccess}) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(formData)
         });
+
+        const body = await response.json();
+
         if (response.ok) {
+            setToastMessage(body.message);
+            setToastType("success");
+            setShowToast(true);
             setFormData({category_name: '', limit: ''});
             if (onSuccess) {
             onSuccess();
             }
         }
+        else if (response.status === 409) {
+            setToastMessage(body.error);
+            setToastType("error");
+            setShowToast(true);
+        }
     }
 
     return (
+        <>
         <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-white rounded-lg shadow w-[50%] ">
             <div>
                 <label className="block text-sm font-medium text-gray-700">Category</label>
@@ -61,6 +77,7 @@ export default function AddBudgetForm({onSuccess}) {
                 <label className="block text-sm font-medium text-gray-700">Limit (€)</label>
                 <input
                     type="number"
+                    min="0"
                     step="0.01"
                     value={formData.limit}
                     onChange={(e) => {
@@ -78,5 +95,12 @@ export default function AddBudgetForm({onSuccess}) {
                 Add budget
             </button>
         </form>
+        <Toast
+            message={toastMessage}
+            show={showToast}
+            onClose={() => setShowToast(false)}
+            type={toastType}
+          />
+        </>
     )
 }

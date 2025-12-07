@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import Toast from "./Toast.jsx";
 
 export default function AddTransactionForm({onSuccess}) {
     const [categories, setCategories] = useState([]);
@@ -9,6 +10,9 @@ export default function AddTransactionForm({onSuccess}) {
         sub_category: '',
         amount: ''
     });
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("error");
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         fetch('http://localhost:5000/api/categories')
@@ -33,15 +37,27 @@ export default function AddTransactionForm({onSuccess}) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(formData)
         });
+
+        const body = await response.json();
+
         if (response.ok) {
             setFormData({category: '', sub_category: '', amount: ''});
+            setToastMessage(body.message);
+            setToastType("success");
+            setShowToast(true);
             if (onSuccess) {
             onSuccess();
             }
         }
+        else {
+            setToastMessage(body.error);
+            setToastType("error");
+            setShowToast(true);
+        }
     }
 
     return (
+        <>
         <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-white rounded-lg shadow w-[50%] ">
             <div>
                 <label className="block text-sm font-medium text-gray-700">Category</label>
@@ -100,6 +116,12 @@ export default function AddTransactionForm({onSuccess}) {
                 Add transaction
             </button>
         </form>
-
+        <Toast
+            message={toastMessage}
+            show={showToast}
+            onClose={() => setShowToast(false)}
+            type={toastType}
+          />
+        </>
     );
 }

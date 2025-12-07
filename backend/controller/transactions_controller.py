@@ -20,13 +20,13 @@ class TransactionsController:
         :param amount: the transaction amount
         """
         category = Category.from_category_as_string(category_name)
-        last_transaction = self.storage.load_all_transactions().first()
+        last_transaction = self.storage.load_all_transactions()[0]
         this_year = datetime.now().year
         this_month = datetime.now().month
         # if it's a new month budget is reseted
         if category in self.budgets and (last_transaction.date.year != this_year or last_transaction.date.month != this_month):
             self.budgets[category].reset_budget()
-        if category not in self.budgets or self.budgets[category].get_remaining() - amount >= 0:
+        if category not in self.budgets or self.budgets[category].get_remaining() - abs(amount) >= 0:
             transaction = Transaction(round(amount, 2), category_name, sub_category)
             self.storage.save_transaction(transaction)
             if category in self.budgets:

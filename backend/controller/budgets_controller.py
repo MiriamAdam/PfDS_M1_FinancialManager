@@ -18,7 +18,7 @@ class BudgetsController:
             if category:
                 transactions = []
                 for t in self.storage.load_transactions_by_category(category_name):
-                    dt = datetime.strptime(t.date, '%Y-%m-%d %H:%M:%S.%f')
+                    dt = t.date
                     if dt.year == datetime.now().year and dt.month == datetime.now().month:
                         transactions.append(t)
                 spent = sum(t.amount for t in transactions)
@@ -32,13 +32,16 @@ class BudgetsController:
         :param category_name: the category of the budget
         :param limit: the limit of the budget
         """
-        try:
-            category = Category.from_category_as_string(category_name)
-            self.budgets[category] = Budget(category, limit)
+        category = Category.from_category_as_string(category_name)
+        first_day_of_month = datetime(datetime.now().year, datetime.now().month, 1)
+        transactions = self.storage.load_transactions_by_from_date(first_day_of_month, category_name)
+        amount_already_spent = sum(abs(t.amount) for t in transactions)
+        if amount_already_spent <= limit:
+            self.budgets[category] = Budget(category, limit, amount_already_spent)
             self.storage.save_budget(category.category_name, limit)
-        except Exception as e:
-            print('ERROR in set_budget', e)
-            raise
+        else:
+            raise ValueError(f"You have already exceeded the budget limit.")
+
 
     def check_if_budget_is_set(self, category_name: str):
         """
