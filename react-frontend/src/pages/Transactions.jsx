@@ -19,7 +19,7 @@ export default function Transactions() {
                             <img
                                 src={categoryIcons[t.category_name]}
                                 alt={t.category_name}
-                                className="size-10"
+                                className="size-10 mr-3"
                             />
                         )}
                         <span>{t.sub_category}</span>

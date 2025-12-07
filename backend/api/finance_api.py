@@ -24,6 +24,7 @@ CORS(app, resources={
 
 DATABASE = 'finances.db'
 
+
 @app.route('/api/chart/monthly-summary', methods=['GET'])
 def get_monthly_summary_chart():
     """Get account balance chart over last 30 days"""
@@ -34,14 +35,15 @@ def get_monthly_summary_chart():
         previous_transactions = transactions_service.get_transactions_by_date(end_date=start_date)
         initial_balance = sum(t.amount for t in previous_transactions)
 
-        transactions_last_30_days = transactions_service.get_transactions_by_date(start_date=start_date, end_date=end_date)
+        transactions_last_30_days = transactions_service.get_transactions_by_date(start_date=start_date,
+                                                                                  end_date=end_date)
 
-        df=pd.DataFrame([{
+        df = pd.DataFrame([{
             'date': t.date,
             'amount': t.amount
         } for t in transactions_last_30_days])
 
-        df['date'] = pd.to_datetime(df['date'],format='ISO8601').dt.normalize()
+        df['date'] = pd.to_datetime(df['date'], format='ISO8601').dt.normalize()
         df['balance'] = df['amount'].cumsum() + initial_balance
         daily_balance = df.groupby('date')['balance'].last()
         date_range = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
@@ -51,13 +53,13 @@ def get_monthly_summary_chart():
 
         plt.figure(figsize=(12, 6))
         plt.plot(date_range, daily_balance,
-                marker='o', linewidth=2.5, markersize=5,
-                color='#2196F3', label='Balance')
+                 marker='o', linewidth=2.5, markersize=5,
+                 color='#2196F3', label='Balance')
 
         plt.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
 
         plt.title('Account Balance - Last 30 Days',
-                 fontsize=16, fontweight='bold', pad=20)
+                  fontsize=16, fontweight='bold', pad=20)
         plt.xlabel('Date', fontsize=12)
         plt.ylabel('Balance (€)', fontsize=12)
         plt.grid(True, alpha=0.3, linestyle='--')
@@ -65,7 +67,6 @@ def get_monthly_summary_chart():
         plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
         plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))
         plt.xticks(rotation=45, ha='right')
-
 
         img = io.BytesIO()
         plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
@@ -86,6 +87,7 @@ def get_monthly_summary_chart():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
 # Transaction Management
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
@@ -98,6 +100,7 @@ def get_categories():
         for cat in Category
     ]
     return jsonify(data)
+
 
 @app.route('/api/transactions', methods=['GET'])
 def get_transactions():
@@ -137,6 +140,7 @@ def add_transaction():
     except Exception as e:
         print("UNCAUGHT ERROR:", e)
         raise
+
 
 @app.route('/api/transactions/by-date', methods=['GET'])
 def get_transactions_by_date():
@@ -222,3 +226,8 @@ def get_all_budgets():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/budgets/<category_name>', methods=['DELETE'])
+def delete_budget(category_name: str):
+    """Deletes a budget for a category"""
+    budgets_service.delete_budget(category_name)
+    return jsonify({'message': f'Budget deleted for {category_name}'}), 200

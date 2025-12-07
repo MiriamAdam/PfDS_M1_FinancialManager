@@ -72,11 +72,12 @@ class BudgetsController:
         else:
             raise ValueError(f"Budget for category {category.category_name} is not set.")
 
-    def delete_budget(self, category: Category):
+    def delete_budget(self, category_string: str):
         """Deletes a budget from self.budgets and database"""
-        for category in self.budgets:
+        category = Category.from_category_as_string(category_string)
+        if category in self.budgets:
             del self.budgets[category]
-            self.storage.delete_budget(category.category_name)
+            self.storage.delete_budget(category_string)
 
     def reset_budget(self, category: Category):
         """Resets a set budget if a new month has begun."""

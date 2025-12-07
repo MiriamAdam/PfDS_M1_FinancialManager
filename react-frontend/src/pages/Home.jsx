@@ -23,7 +23,7 @@ export default function Home() {
         <h2 className="text-xl pt-3 pb-3 pl-1 tracking-wide text-gray-700">Balance:</h2>
         <div className="bg-white w-fit text-xl font-semibold p-3 border-2 border-gray-200 rounded-2xl shadow-lg">{balance.toFixed(2)} €</div>
         {chartUrl && (
-            <div className="bg-white pl-5 pt-5 pb-5 pr-10 mt-10 rounded-lg shadow-lg w-[90%]">
+            <div className="bg-white pl-5 pt-5 pb-5 pr-10 mt-15 rounded-lg shadow-lg w-[90%]">
                 <img
                     key={chartUrl}
                     src={chartUrl}
@@ -33,7 +33,7 @@ export default function Home() {
                 />
             </div>
         )}
-        <h2 className="text-xl pl-5 pt-5 pb-5 tracking-wide text-gray-700">Latest Transactions:</h2>
+        <h2 className="text-xl pl-5 pt-15 pb-5 tracking-wide text-gray-700">Latest Transactions:</h2>
         <div className="bg-white pr-10 pt-3 pl-5 border-2 border-gray-200 rounded-2xl shadow-lg w-[90%]">
             <ul >
                 {transactions.slice(0, 10).map((t, i) =>

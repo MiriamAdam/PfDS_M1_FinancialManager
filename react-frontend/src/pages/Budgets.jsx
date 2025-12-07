@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import AddBudgetForm from "../components/AddBudgetForm.jsx";
+import DeleteBudgetForm from "../components/DeleteBudgetsForm.jsx";
 
 export default function Budgets() {
     const [ budgets, setBudgets ] = useState(null);
@@ -28,8 +29,10 @@ export default function Budgets() {
         <div className="ml-[10%] mr-25 pb-15">
             <h1 className="text-3xl font-semibold tracking-wider text-gray-700 pt-15 pb-5 ">Manage your budgets:</h1>
             {renderBudgetsContent()}
-            <AddBudgetForm onSuccess={loadBudgets} />
-
+            <div className="flex justify-center gap-5 w-full">
+                <AddBudgetForm onSuccess={loadBudgets} />
+                <DeleteBudgetForm onSuccess={loadBudgets} />
+            </div>
         </div>
     )
 }
