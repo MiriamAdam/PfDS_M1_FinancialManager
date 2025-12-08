@@ -11,28 +11,25 @@ class TransactionsController:
 
     def add_transaction(self, amount: float, category_name: str, sub_category: str):
         """
-        Adds a transaction to the database.
-        Updates the budget for the category if set.
-        Raises ValueError if the expenditure would exceed the budget.
+        Adds a transaction to the database if transaction doesn't exceed a set budget limit.
 
         :param category_name: the category of the transaction
         :param sub_category: sub_category of the transaction
         :param amount: the transaction amount
         """
         category = Category.from_category_as_string(category_name)
-        last_transaction = self.storage.load_all_transactions()[0]
-        this_year = datetime.now().year
-        this_month = datetime.now().month
-        # if it's a new month budget is reseted
-        if category in self.budgets and (last_transaction.date.year != this_year or last_transaction.date.month != this_month):
-            self.budgets[category].reset_budget()
-        if category not in self.budgets or self.budgets[category].get_remaining() - abs(amount) >= 0:
-            transaction = Transaction(round(amount, 2), category_name, sub_category)
-            self.storage.save_transaction(transaction)
+
+        if not category.is_income:
             if category in self.budgets:
-                self.budgets[category].add_expense(amount)
-        else:
-            raise ValueError(f"Budget for category {category_name} is exceeded.")
+                if self.budgets[category].get_remaining() - amount < 0:
+                    raise ValueError(f"Budget for category {category_name} is exceeded.")
+
+        transaction = Transaction(amount, category_name, sub_category)
+        self.storage.save_transaction(transaction)
+
+        if category in self.budgets:
+            self.budgets[category].add_expense(amount)
+
 
     def get_all_transactions(self):
         """

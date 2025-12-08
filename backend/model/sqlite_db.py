@@ -186,7 +186,8 @@ class SqliteDb:
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS budgets (
                 category_name TEXT NOT NULL UNIQUE,
-                'limit' REAL NOT NULL
+                'limit' REAL NOT NULL,
+                last_reset_month text
             )
             ''')
 
@@ -200,6 +201,23 @@ class SqliteDb:
                    INSERT OR REPLACE INTO budgets (category_name, "limit")
                    VALUES (?, ?)''',
                    (category_name, limit))
+            conn.commit()
+
+    def get_budget_reset_month(self, category_name):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+            SELECT last_reset_month FROM budgets WHERE category_name=?''',
+                           (category_name,))
+            row = cursor.fetchone()
+            return row[0] if row else None
+
+    def update_budget_reset_month(self, category_name, month):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+            UPDATE budgets SET last_reset_month = ? WHERE category_name = ?''',
+                           (month, category_name))
             conn.commit()
 
     def load_all_budgets(self):

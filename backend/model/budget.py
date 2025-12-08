@@ -8,7 +8,7 @@ class Budget:
         self.spent = spent
 
     def add_expense(self, amount: float):
-        self.spent += abs(amount)
+        self.spent += amount
 
     def get_remaining(self) -> float:
         return self.limit - self.spent

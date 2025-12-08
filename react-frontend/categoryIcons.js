@@ -9,5 +9,4 @@ export const categoryIcons= {
     'Education': '/education.svg',
     'Pet': '/pet.svg',
     'Other': '/other.svg'
-
 }

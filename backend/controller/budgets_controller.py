@@ -23,7 +23,17 @@ class BudgetsController:
                         transactions.append(t)
                 spent = sum(t.amount for t in transactions)
                 self.budgets[category] = Budget(category, limit, spent)
-                print(transactions)
+        self.ensure_budgets_are_current()
+
+    def ensure_budgets_are_current(self):
+        """Checks if a new month has begun and then resets the budget."""
+        current_month = datetime.now().strftime("%Y-%m")
+        for category, budget in self.budgets.items():
+            last_reset = self.storage.get_budget_reset_month(category.category_name)
+            if last_reset != current_month:
+                budget.reset_spent()
+                self.storage.update_budget_reset_month(category.category_name, current_month)
+                self.storage.save_budget(category.category_name, budget.limit)
 
     def set_budget(self, category_name: str, limit: float):
         """
@@ -35,33 +45,12 @@ class BudgetsController:
         category = Category.from_category_as_string(category_name)
         first_day_of_month = datetime(datetime.now().year, datetime.now().month, 1)
         transactions = self.storage.load_transactions_by_from_date(first_day_of_month, category_name)
-        amount_already_spent = sum(abs(t.amount) for t in transactions)
+        amount_already_spent = sum(t.amount for t in transactions)
         if amount_already_spent <= limit:
             self.budgets[category] = Budget(category, limit, amount_already_spent)
             self.storage.save_budget(category.category_name, limit)
         else:
-            raise ValueError(f"You have already exceeded the budget limit.")
-
-
-    def check_if_budget_is_set(self, category_name: str):
-        """
-        Checks if a budget is set for the given category.
-        """
-        category = Category.from_category_as_string(category_name)
-        return self.budgets[category]
-
-    def set_budget_with_already_incurred_expenses(self, category: Category, limit: float):
-        """
-        Sets budget and takes previous expenditure into account.
-
-        :param category: the category of the budget
-        :param limit: the limit of the budget
-        """
-        transactions = self.storage.load_transactions_by_category(category)
-        total = 0
-        for transaction in transactions:
-            total += transaction.amount
-        self.budgets[category] = Budget(category, limit, total)
+            raise ValueError(f"You have already exceeded the budget limit this month.")
 
     def check_budget(self, category: Category) -> float:
         """

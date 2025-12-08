@@ -71,12 +71,12 @@ class DbCreator:
             if m == 12:
                 self.add(1000, "Income", "Bonus", add_random_time(first_of_month))
             # HOME monthly at beginning
-            self.add(-1200, "Home", "Rent", add_random_time(first_of_month))
-            self.add(-random.uniform(50,80), "Home", "Electricity", add_random_time(first_of_month))
-            self.add(-random.uniform(30,60), "Home", "Gas", add_random_time(first_of_month))
-            self.add(-18.36, "Home", "GEZ", add_random_time(first_of_month))
-            self.add(-40, "Home", "Internet", add_random_time(first_of_month))
-            self.add(-random.uniform(40,90), "Home", "Insurance", add_random_time(first_of_month))
+            self.add(1200, "Home", "Rent", add_random_time(first_of_month))
+            self.add(random.uniform(50,80), "Home", "Electricity", add_random_time(first_of_month))
+            self.add(random.uniform(30,60), "Home", "Gas", add_random_time(first_of_month))
+            self.add(18.36, "Home", "GEZ", add_random_time(first_of_month))
+            self.add(40, "Home", "Internet", add_random_time(first_of_month))
+            self.add(random.uniform(40,90), "Home", "Insurance", add_random_time(first_of_month))
             # OTHER categories: at least 20 entries per month (distributed across categories)
             num_other = random.randint(20, 40)  # at least 20, up to 40 for variability
             other_keys = [k for k in categories.keys() if k not in ("Income", "Home")]
@@ -87,19 +87,19 @@ class DbCreator:
                 if cat == "Sales":
                     amt = random.uniform(5, 200)
                 elif cat == "Food":
-                    amt = -random.uniform(3, 80)
+                    amt = random.uniform(3, 80)
                 elif cat == "Transport":
-                    amt = -random.uniform(1, 60)
+                    amt = random.uniform(1, 60)
                 elif cat == "Sport":
-                    amt = -random.uniform(5, 80)
+                    amt = random.uniform(5, 80)
                 elif cat == "Health":
-                    amt = -random.uniform(5, 300)
+                    amt = random.uniform(5, 300)
                 elif cat == "Education":
-                    amt = -random.uniform(5, 250)
+                    amt = random.uniform(5, 250)
                 elif cat == "Pet":
-                    amt = -random.uniform(5, 200)
+                    amt = random.uniform(5, 200)
                 else:  # Other
-                    amt = -random.uniform(5, 400)
+                    amt = random.uniform(5, 400)
                 # random day in month (1-28 to be safe)
                 day = random.randint(1,28)
                 date_date = add_random_time(datetime(y, m, day))

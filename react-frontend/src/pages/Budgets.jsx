@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import AddBudgetForm from "../components/AddBudgetForm.jsx";
 import DeleteBudgetForm from "../components/DeleteBudgetsForm.jsx";
+import BudgetList from "../components/BudgetList.jsx";
 
 export default function Budgets() {
     const [ budgets, setBudgets ] = useState(null);
@@ -18,14 +19,14 @@ export default function Budgets() {
     function renderBudgetsContent() {
         if (!budgets) return <p className={"p-5 text-xl tracking-wide text-gray-700"}>Loading budgets...</p>;
         if (Object.keys(budgets).length === 0) return <p className={"p-5 text-xl tracking-wide text-gray-700"}> - You have not set any budgets -</p>;
-        return (<pre>{JSON.stringify(budgets, null, 2)}</pre>);
+        return <BudgetList budgets={budgets} />
     }
 
     return (
         <div className="ml-[10%] mr-25 pb-15">
             <h1 className="text-3xl font-semibold tracking-wider text-gray-700 pt-15 pb-5 ">Manage your monthly budgets:</h1>
             {renderBudgetsContent()}
-            <div className="flex justify-center gap-5 w-full">
+            <div className="flex justify-center gap-5 w-full pt-5">
                 <AddBudgetForm onSuccess={loadBudgets} />
                 <DeleteBudgetForm onSuccess={loadBudgets} />
             </div>
