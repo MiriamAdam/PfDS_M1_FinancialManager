@@ -2,11 +2,15 @@ from enum import Enum
 from typing import List
 
 class Category(Enum):
-    """
-    Enum of possible categories for transactions.
-    Format: (category, sub_category, is_income)
-    """
+    """Enum of possible categories for transactions."""
     def __init__(self, category_name: str, sub_categories: List[str], is_income: bool):
+        """
+        Each category is initialized with:
+
+        :param category_name: The display name of the main category
+        :param sub_categories: List of sub-categories for this main category
+        :param is_income: True if the category represents income, False otherwise
+        """
         self.category_name = category_name
         self.sub_categories = sub_categories
         self.is_income = is_income
@@ -23,13 +27,8 @@ class Category(Enum):
     OTHER = ("Other", ['Clothes', 'Shoes', 'Gift', 'Holiday', 'Electronics'], False)
 
     @classmethod
-    def get_all_categories(cls) -> List[object]:
-        # returns all categories
-        return [cat for cat in cls]
-
-    @classmethod
     def from_category_as_string(cls, category_name: str):
-        # returns category from category name
+        """Searchs and returns category enum member from category_name. """
         for cat in cls:
             if cat.category_name == category_name:
                 return cat

@@ -5,10 +5,15 @@ const TransactionsContext = createContext();
 export function TransactionsProvider({ children }) {
     const [transactions, setTransactions] = useState([]);
 
-    const loadTransactions = () => {
-        fetch("http://localhost:5000/api/transactions")
+    const loadTransactions = (category = null) => {
+        let url = "http://localhost:5000/api/transactions";
+        if(category){
+            url = `${url}?category=${category}`;
+        }
+        fetch(url)
             .then(res => res.json())
-            .then(data => setTransactions([...data]));
+            .then(data => setTransactions([...data]))
+            .catch (error => console.error("Error loading transactions", error));
     };
 
     useEffect(() => {

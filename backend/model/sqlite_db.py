@@ -194,6 +194,12 @@ class SqliteDb:
             conn.commit()
 
     def save_budget(self, category_name: str, limit: float):
+        """
+        Saves a budget in database.
+
+        :param category_name: name of the category of the budget
+        :param limit: limit of the budget
+        """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
@@ -204,6 +210,11 @@ class SqliteDb:
             conn.commit()
 
     def get_budget_reset_month(self, category_name):
+        """
+        Gives last reset_month stamp of a budget.
+
+        :param category_name: name of the category of the budget
+        """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -213,6 +224,12 @@ class SqliteDb:
             return row[0] if row else None
 
     def update_budget_reset_month(self, category_name, month):
+        """
+        Updates last_reset_month stamp.
+
+        :param category_name: name of the category of the budget
+        :param month: month of update
+        """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute('''

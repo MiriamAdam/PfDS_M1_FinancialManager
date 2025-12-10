@@ -28,7 +28,7 @@ export default function Budgets() {
             {renderBudgetsContent()}
             <div className="flex justify-center gap-5 w-full pt-5">
                 <AddBudgetForm onSuccess={loadBudgets} />
-                <DeleteBudgetForm onSuccess={loadBudgets} />
+                <DeleteBudgetForm budgets={budgets} onSuccess={loadBudgets} />
             </div>
         </div>
     )

@@ -11,22 +11,15 @@ class BudgetsController:
         self._load_budgets_from_storage()
 
     def _load_budgets_from_storage(self):
-        """Loads all budgets from the database.
-        Sums up all amounts already spent for a budget in current month. """
+        """Loads persistent budget limits from the database and ensures spent amounts of budgets are current."""
         for category_name, limit in self.storage.load_all_budgets().items():
             category = Category.from_category_as_string(category_name)
             if category:
-                transactions = []
-                for t in self.storage.load_transactions_by_category(category_name):
-                    dt = t.date
-                    if dt.year == datetime.now().year and dt.month == datetime.now().month:
-                        transactions.append(t)
-                spent = sum(t.amount for t in transactions)
-                self.budgets[category] = Budget(category, limit, spent)
+                self.budgets[category] = Budget(category, limit)
         self.ensure_budgets_are_current()
 
     def ensure_budgets_are_current(self):
-        """Checks if a new month has begun and then resets the budget."""
+        """Checks if a new month has begun and then resets spent amount of budgets."""
         current_month = datetime.now().strftime("%Y-%m")
         for category, budget in self.budgets.items():
             last_reset = self.storage.get_budget_reset_month(category.category_name)
@@ -34,6 +27,22 @@ class BudgetsController:
                 budget.reset_spent()
                 self.storage.update_budget_reset_month(category.category_name, current_month)
                 self.storage.save_budget(category.category_name, budget.limit)
+
+    def get_current_spent_amount(self, category: str):
+        """
+        Sums up all amounts already spent for a budget category in the current month.
+
+        :param category: the category of the budget
+        """
+        first_of_month = datetime(datetime.now().year, datetime.now().month, 1)
+        transactions = self.storage.load_transactions_by_from_date(first_of_month, category)
+        sum_spent = 0
+        for t in transactions:
+            category = Category.from_category_as_string(t.category_name)
+            if not category.is_income:
+                sum_spent += t.amount
+        return sum_spent
+
 
     def set_budget(self, category_name: str, limit: float):
         """
@@ -52,25 +61,9 @@ class BudgetsController:
         else:
             raise ValueError(f"You have already exceeded the budget limit this month.")
 
-    def check_budget(self, category: Category) -> float:
-        """
-        Checks how much money is left until a set budget is reached.
-
-        :param category: the category of the budget
-        :return: the amount of money left until a budget is reached OR ValueError if budget is not set
-        """
-        if category in self.budgets:
-            return self.budgets[category].get_remaining()
-        else:
-            raise ValueError(f"Budget for category {category.category_name} is not set.")
-
     def delete_budget(self, category_string: str):
         """Deletes a budget from self.budgets and database"""
         category = Category.from_category_as_string(category_string)
         if category in self.budgets:
             del self.budgets[category]
             self.storage.delete_budget(category_string)
-
-    def reset_budget(self, category: Category):
-        """Resets a set budget if a new month has begun."""
-        self.budgets[category].reset_spent()

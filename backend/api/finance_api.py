@@ -1,17 +1,10 @@
-import io
 from datetime import datetime
 
-import pandas as pd
 from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
-from matplotlib import pyplot as plt
-import matplotlib.dates as mdates
-from datetime import timedelta
 
-from backend.services import transactions_service
-from backend.services import budgets_service
+from backend.services import transactions_service, reports_service,budgets_service, db_creator
 from backend.model.category import Category
-from backend.services import db_creator
 
 app = Flask(__name__)
 CORS(app, resources={
@@ -22,60 +15,76 @@ CORS(app, resources={
     }
 })
 
-DATABASE = 'finances.db'
+# If you have to create a new database 'finances.db' for testing, delete the old file,
+# uncomment the following command (line 30) and run flask once.
+# After that you have to make the line commented out again.
 #db_creator.run_creator()
 
-def signed_amount(t):
-    category = Category.from_category_as_string(t.category_name)
-    return t.amount if category.is_income else -t.amount
+@app.route('/api/chart/monthly-income-share-chart', methods=['GET'])
+def get_monthly_income_share_chart():
+    """
+    Returns a donut-chart with income shares by sub-categories for a specified month as a PNG image stream.
+    The function delegates the calculation and chart creation to the reports service
+    and packages the result for transmission as an HTTP response.
+    """
+    try:
+        year = int(request.args.get('year', datetime.now().year))
+        month = int(request.args.get('month', datetime.now().month))
+
+        img = reports_service.get_monthly_income_share_chart_img(year, month)
+
+        response = make_response(send_file(img, mimetype='image/png'))
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+        response.headers['Access-Control-Allow-Methods'] = 'GET'
+        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+
+        return response
+
+    except Exception as e:
+        print(f"Chart error: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/chart/monthly-spending-share-chart', methods=['GET'])
+def get_monthly_spending_share_chart():
+    """
+    Returns a donut-chart with expense shares by categories for a specified month as a PNG image stream.
+    The function delegates the calculation and chart creation to the reports service
+    and packages the result for transmission as an HTTP response.
+    """
+    try:
+        year = int(request.args.get('year', datetime.now().year))
+        month = int(request.args.get('month', datetime.now().month))
+
+        img = reports_service.get_monthly_spending_share_chart_img(year, month)
+
+        response = make_response(send_file(img, mimetype='image/png'))
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+        response.headers['Access-Control-Allow-Methods'] = 'GET'
+        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+
+        return response
+
+    except Exception as e:
+        print(f"Chart error: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chart/monthly-summary', methods=['GET'])
 def get_monthly_summary_chart():
-    """Get account balance chart over last 30 days"""
+    """
+    Returns the account balance history for the last 30 days as a PNG image stream.
+    The function delegates the calculation and chart creation to the reports service
+    and packages the result for transmission as an HTTP response.
+    """
     try:
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
-
-        previous_transactions = transactions_service.get_transactions_by_date(end_date=start_date)
-        initial_balance = sum(signed_amount(t) for t in previous_transactions)
-
-        transactions_last_30_days = transactions_service.get_transactions_by_date(start_date=start_date,
-                                                                                  end_date=end_date)
-
-        df = pd.DataFrame([{
-            'date': t.date,
-            'amount': signed_amount(t)
-        } for t in transactions_last_30_days])
-
-        df['date'] = df['date'].dt.normalize()
-        df['balance'] = df['amount'].cumsum() + initial_balance
-        daily_balance = df.groupby('date')['balance'].last()
-        date_range = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
-        daily_balance = daily_balance.reindex(date_range, method='ffill')
-        daily_balance.iloc[0] = initial_balance
-        daily_balance = daily_balance.fillna(0)
-
-        plt.figure(figsize=(12, 6))
-        plt.plot(date_range, daily_balance,
-                 marker='o', linewidth=2.5, markersize=5,
-                 color='#2196F3', label='Balance')
-
-        plt.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
-
-        plt.title('Account Balance - Last 30 Days',
-                  fontsize=16, fontweight='bold', pad=20)
-        plt.xlabel('Date', fontsize=12)
-        plt.ylabel('Balance (€)', fontsize=12)
-        plt.grid(True, alpha=0.3, linestyle='--')
-
-        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
-        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))
-        plt.xticks(rotation=45, ha='right')
-
-        img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
-        img.seek(0)
-        plt.close()
+        img = reports_service.get_monthly_summary_chart_img()
 
         response = make_response(send_file(img, mimetype='image/png'))
         response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
@@ -91,48 +100,16 @@ def get_monthly_summary_chart():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/api/chart/bar-chart', methods=['GET'])
 def get_bar_chart():
+    """
+    Returns a bar chart that shows each set budget in relation to its spent amount in the current month as a PNG image stream.
+    The function delegates the calculation and chart creation to the reports service
+    and packages the result for transmission as an HTTP response.
+    """
     try:
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
-
-        transactions_last_30_days = transactions_service.get_transactions_by_date(start_date=start_date,
-                                                                                  end_date=end_date)
-
-        budgets = budgets_service.budgets.items()
-
-        df = pd.DataFrame([{
-            'category': t.category_name,
-            'date': t.date,
-            'amount': signed_amount(t)
-        } for t in transactions_last_30_days
-            if not next(c for c in Category if c.category_name == t.category_name).is_income])
-
-        df_grouped = df.groupby('category')['amount'].sum()
-        categories = df_grouped.index
-        amounts = df_grouped.values
-
-        colors = []
-        for cat, amount in zip(categories, amounts):
-            limit = budgets.mapping.get(cat)
-            if limit is None or amount < 0.5 * limit:
-                colors.append('green')
-            elif amount < 0.8 * limit:
-                colors.append('yellow')
-            else:
-                colors.append('red')
-
-        plt.bar(categories, amounts, color=colors)
-
-        plt.title('Expenses of last 30 days per category:')
-        plt.ylabel('Amount (€)')
-        plt.xticks(rotation=45, ha='right')
-
-        img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
-        img.seek(0)
-        plt.close()
+        img = reports_service.get_bar_chart_img()
 
         response = make_response(send_file(img, mimetype='image/png'))
         response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
@@ -259,7 +236,7 @@ def set_budget():
 
         budgets_service.set_budget(category_name, limit)
 
-        return jsonify({'message': f'Budget set for {category_name}'}), 201
+        return jsonify({'message': f'Budget set for category: {category_name}'}), 201
     except KeyError as e:
         return jsonify({'error': f'Missing field: {str(e)}'}), 400
     except ValueError as e:
@@ -270,15 +247,20 @@ def set_budget():
 
 @app.route('/api/budgets', methods=['GET'])
 def get_all_budgets():
-    """Get all budgets."""
+    """Gets all budgets and calculates amount that is already spent in this month."""
     try:
         result = []
 
         for category, budget in budgets_service.budgets.items():
+            category_name = category.category_name
+            current_spent_amount = budgets_service.get_current_spent_amount(category_name)
+
+            budget.spent = current_spent_amount
+
             result.append({
-                'category_name': category.category_name,
+                'category_name': category_name,
                 'limit': budget.limit,
-                'spent': budget.spent,
+                'spent': current_spent_amount,
                 'remaining': budget.get_remaining()
             })
 
@@ -292,4 +274,4 @@ def get_all_budgets():
 def delete_budget(category_name: str):
     """Deletes a budget for a category"""
     budgets_service.delete_budget(category_name)
-    return jsonify({'message': f'Budget deleted for {category_name}'}), 200
+    return jsonify({'message': f'Budget {category_name} was successfully deleted'}), 200

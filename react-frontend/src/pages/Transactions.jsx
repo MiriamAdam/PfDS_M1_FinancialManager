@@ -1,15 +1,46 @@
 import {categoryIcons} from "../../categoryIcons.js";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import AddTransactionForm from "../components/AddTransactionForm.jsx";
 import {useTransactions} from "../components/TransactionsContext.jsx";
 
 export default function Transactions() {
     const {transactions, reload} = useTransactions();
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("");
+
+    useEffect(() => {
+        fetch("http://localhost:5000/api/categories")
+            .then(r => r.json())
+            .then(json => setCategories(json))
+            .catch(err => console.error(err));
+    }, [])
+
+    const handleCategoryChange = (e) => {
+        const category = e.target.value;
+        setSelectedCategory(category);
+        reload(category);
+    }
+
 
     return (
         <div className="ml-10 mr-25 pb-15 flex flex-col items-center">
             <div className="pt-5 pb-3"></div>
             <AddTransactionForm onSuccess={reload}/>
+            <div className="flex flex-col items-center bg-white pr-10 mt-5 pt-3 pl-5 border-2 border-gray-200 rounded-2xl shadow-lg w-[50%]">
+                <label className="block text-sm font-medium text-gray-700 ">Filter by category</label>
+                <select
+                    value={selectedCategory}
+                    onChange={handleCategoryChange}
+                    className="mt-1 mb-5 block w-full rounded-md border-gray-300 shadow-sm"
+                >
+                    <option value="">All transactions</option>
+                    {categories.map(cat => (
+                        <option key={cat.category_name} value={cat.category_name}>
+                          {cat.category_name}
+                        </option>
+                    ))}
+                </select>
+            </div>
             <div className="bg-white pr-10 mt-5 pt-3 pl-5 border-2 border-gray-200 rounded-2xl shadow-lg max-h-200 overflow-y-auto w-[50%]">
             <ul >
                 {transactions.map((t, i) =>
@@ -37,9 +68,7 @@ export default function Transactions() {
                 </li>
                 )}
             </ul>
-        </div>
-           
-
+            </div>
         </div>
     )
 }

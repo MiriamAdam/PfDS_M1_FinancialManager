@@ -3,6 +3,7 @@ from datetime import datetime, date
 
 
 def add_random_time(dt):
+    """Adds a random time to a given date."""
     return dt.replace(
         hour=random.randint(0, 23),
         minute=random.randint(0, 59),

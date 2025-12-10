@@ -100,9 +100,6 @@ export default function AddTransactionForm({onSuccess}) {
                     value={formData.amount}
                     onChange={(e) => {
                         let value = parseFloat(e.target.value);
-                        if (formData.category !== "Income" && formData.category !== "Sales") {
-                            value = -Math.abs(value);
-                        }
                         setFormData({...formData, amount: String(value)})}}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-center"
                     required
@@ -115,7 +112,7 @@ export default function AddTransactionForm({onSuccess}) {
             >
                 Add transaction
             </button>
-        </form>
+         </form>
         <Toast
             message={toastMessage}
             show={showToast}

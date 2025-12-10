@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from dateutil.relativedelta import relativedelta
+
 from backend.model import Transaction, Category, SqliteDb, Budget
 
 class TransactionsController:
@@ -18,17 +20,19 @@ class TransactionsController:
         :param amount: the transaction amount
         """
         category = Category.from_category_as_string(category_name)
+        budget = self.budgets.get(category)
 
-        if not category.is_income:
-            if category in self.budgets:
-                if self.budgets[category].get_remaining() - amount < 0:
+        if not category.is_income and budget:
+            current_spent = self.budgets.get_current_spent_amount(category_name, budget)
+            budget.spent = current_spent
+            if budget.get_remaining() - amount < 0:
                     raise ValueError(f"Budget for category {category_name} is exceeded.")
 
         transaction = Transaction(amount, category_name, sub_category)
         self.storage.save_transaction(transaction)
 
-        if category in self.budgets:
-            self.budgets[category].add_expense(amount)
+        if budget:
+            budget.add_expense(amount)
 
 
     def get_all_transactions(self):
