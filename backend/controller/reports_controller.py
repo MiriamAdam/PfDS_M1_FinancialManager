@@ -5,28 +5,44 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot as plt
 from matplotlib.patches import Patch
+import matplotlib.dates as mdates
 
 from backend.model import Category
 
 
 class ReportsController:
+    """
+    Controller class for creating plots with matplotlib and collecting data with pandas.
+    """
     def __init__(self, budgets_service, transactions_service):
+        """
+        Initializes ReportsController object with access to budgets service and transactions service.
+        """
         self.budgets = budgets_service
         self.transactions = transactions_service
 
     def get_bar_chart_img(self):
+        """
+        Creates a bar-chart that shows each set budget in relation to its spent amount in the current month
+        as a PNG image with matplotlib.
+        """
         end_date = datetime.now()
         start_date = end_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        transactions_last_30_days = self.transactions.get_transactions_by_date(start_date=start_date,
+        transactions_current_month = self.transactions.get_transactions_by_date(start_date=start_date,
                                                                                   end_date=end_date)
+        data_for_df = []
 
-        df = pd.DataFrame([{
-            'category': t.category_name,
-            'date': t.date,
-            'amount': self.signed_amount(t)
-        } for t in transactions_last_30_days
-            if not next(c for c in Category if c.category_name == t.category_name).is_income])
+        for t in transactions_current_month:
+            category_enum = Category.from_category_as_string(t.category_name)
+            if not category_enum.is_income:
+                data_for_df.append({
+                    'category': t.category_name,
+                    'date': t.date,
+                    'amount': self.signed_amount(t)
+                })
+
+        df = pd.DataFrame(data_for_df)
 
         budget_limits = {
             category.category_name: budget.limit
@@ -34,8 +50,17 @@ class ReportsController:
         }
 
         df_grouped = df.groupby('category')['amount'].sum()
-        categories = df_grouped.index
-        amounts = df_grouped.values
+        spent_amounts_by_category = df_grouped.to_dict()
+
+        plot_data = {}
+        for category_name in budget_limits.keys():
+            category_enum = Category.from_category_as_string(category_name)
+            if category_enum is not None:
+                spent_amount = spent_amounts_by_category.get(category_name, 0)
+                plot_data[category_name] = spent_amount
+
+        categories = list(plot_data.keys())
+        amounts = list(plot_data.values())
 
         colors = []
         for cat, amount in zip(categories, amounts):
@@ -103,8 +128,7 @@ class ReportsController:
 
     def get_monthly_spending_share_chart_img(self, year, month):
         """
-        Creates a donut-chart with expense shares by categories for a specified month with matplotlib.
-        The png-image is returned as a picture stream.
+        Creates a donut-chart with expense shares by categories for a specified month with matplotlib as png-image.
         """
         start_date = datetime(year, month, 1)
         end_date = start_date + relativedelta(months=1) - relativedelta(seconds=1)
@@ -144,8 +168,7 @@ class ReportsController:
 
     def get_monthly_income_share_chart_img(self, year, month):
         """
-        Creates a donut-chart with income shares by sub-categories for a specified month with matplotlib.
-        The png-image is returned as a picture stream.
+        Creates a donut-chart with income shares by sub-categories for a specified month with matplotlib as png-image.
         """
 
         start_date = datetime(year, month, 1)
@@ -186,8 +209,7 @@ class ReportsController:
 
     def get_monthly_summary_chart_img(self):
         """
-        Creates an account balance chart for the last 30 days with matplotlib.
-        The png-image is returned as a picture stream.
+        Creates an account balance chart for the last 30 days with matplotlib as png-image.
         """
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30)

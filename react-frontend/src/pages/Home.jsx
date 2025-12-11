@@ -1,17 +1,40 @@
 
 import React, {useEffect, useState} from 'react';
-import {categoryIcons} from "../../categoryIcons.js";
+import {categoryIcons} from "../config/categoryIcons.js";
 import {useTransactions} from "../components/TransactionsContext.jsx";
 
+/**
+ * Home component.
+ *
+ * Displays:
+ * - Current account balance
+ * - Monthly summary chart
+ * - Latest 10 transactions
+ *
+ * Fetches data from TransactionsContext and updates chart when transactions change.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered Home UI
+ */
 export default function Home() {
     const { transactions, reload } = useTransactions();
+    /**
+     * Calculates the total account balance from all transactions.
+     * @type {number}
+     */
     const balance = transactions.reduce((total, transaction) => total + transaction.amount, 0);
     const [chartUrl, setChartUrl] = useState(null);
 
+    /**
+     * Reloads transactions when component mounts.
+     */
     useEffect(() => {
       reload();
     }, []);
 
+    /**
+     * Updates the monthly summary chart whenever transactions change.
+     */
     useEffect(() => {
         setChartUrl(`http://localhost:5000/api/chart/monthly-summary?t=${Date.now()}`);
     }, [transactions]);

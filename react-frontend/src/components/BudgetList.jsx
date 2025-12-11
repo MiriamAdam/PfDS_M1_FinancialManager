@@ -1,6 +1,15 @@
-import {categoryIcons} from "../../categoryIcons.js";
+import {categoryIcons} from "../config/categoryIcons.js";
 import React from "react";
 
+/**
+ * Displays a list of budgets in a responsive grid layout.
+ * Each budget shows category, limit, spent, and remaining amounts.
+ * Shows a category icon if available.
+ *
+ * @param {Object} props - Component props
+ * @param {Array<{category_name: string, limit: number, spent: number, remaining: number}>} props.budgets - List of budget objects
+ * @returns {JSX.Element} Budget list grid
+ */
 export default function BudgetList({budgets}) {
     const labels =  {
         category_name: "Category",

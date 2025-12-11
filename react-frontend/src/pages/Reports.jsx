@@ -1,11 +1,19 @@
 import React, {useEffect, useState} from "react";
 
+/**
+ * Returns an array of month names in German.
+ * @returns {string[]} Array of month names ("January", "February", etc.)
+ */
 const getMonthNames = () => {
     return Array.from({ length: 12 }, (item, i) => {
         return new Date(null, i + 1, null).toLocaleDateString('de-DE', { month: 'long' });
     });
 };
 
+/**
+ * Returns an array of the most recent 5 years including the current year.
+ * @returns {number[]} Array of years (e.g., [2025, 2024, 2023, 2022, 2021])
+ */
 const getRecentYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -15,6 +23,19 @@ const getRecentYears = () => {
     return years;
 };
 
+/**
+ * Reports component.
+ *
+ * Displays:
+ * - A bar chart for monthly budget overview
+ * - Donut charts for monthly spending and income shares
+ * - Month and year selectors to update charts
+ *
+ * Fetches chart images from the backend and updates images on user selection.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered reports UI
+ */
 export default function Reports() {
     const [chartUrl, setChartUrl] = useState(null);
     const [monthlySpendingShareChartUrl, setMonthlySpendingShareChartUrl] = useState(null);
@@ -26,6 +47,9 @@ export default function Reports() {
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
     const [selectedYear, setSelectedYear] = useState(currentYear);
 
+    /**
+     * Initializes month names, recent years, and loads initial charts on mount.
+     */
     useEffect(() => {
         setMonthNames(getMonthNames());
         setAvailableYears(getRecentYears());
@@ -33,6 +57,12 @@ export default function Reports() {
         reloadShareCharts(currentMonth, currentYear);
     }, []);
 
+    /**
+     * Reloads the monthly spending and income share charts for a given month and year.
+     *
+     * @param {number} month - Selected month (1-12)
+     * @param {number} year - Selected year (e.g., 2025)
+     */
     const reloadShareCharts = (month, year) => {
         const urlSpending = `http://localhost:5000/api/chart/monthly-spending-share-chart?year=${year}&month=${month}&t=${Date.now()}`;
         setMonthlySpendingShareChartUrl(urlSpending);
@@ -40,12 +70,20 @@ export default function Reports() {
         setMonthlyIncomeShareChartUrl(urlIncome);
     }
 
+    /**
+     * Handles month selection change and reloads share charts.
+     * @param {React.ChangeEvent<HTMLSelectElement>} e - Change event from month select
+     */
      const handleMonthChange = (e) => {
         const month = parseInt(e.target.value, 10);
         setSelectedMonth(month);
         reloadShareCharts(month, selectedYear);
     }
 
+    /**
+     * Handles year selection change and reloads share charts.
+     * @param {React.ChangeEvent<HTMLSelectElement>} e - Change event from year select
+     */
     const handleYearChange = (e) => {
         const year = parseInt(e.target.value, 10);
         setSelectedYear(year);

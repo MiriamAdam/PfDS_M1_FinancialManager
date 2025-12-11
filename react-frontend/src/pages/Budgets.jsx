@@ -3,6 +3,15 @@ import AddBudgetForm from "../components/AddBudgetForm.jsx";
 import DeleteBudgetForm from "../components/DeleteBudgetsForm.jsx";
 import BudgetList from "../components/BudgetList.jsx";
 
+/**
+ * Budgets component.
+ *
+ * Displays the user's monthly budgets, allows adding new budgets and deleting existing ones.
+ * Fetches budget data from the backend and updates the list when changes occur.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered Budgets UI
+ */
 export default function Budgets() {
     const [ budgets, setBudgets ] = useState(null);
     const loadBudgets = () => {
@@ -12,10 +21,21 @@ export default function Budgets() {
             .catch(err => console.error(err));
     };
 
+    /**
+     * Fetches budgets from the backend API and updates the state.
+     */
     useEffect(() => {
         loadBudgets();
     }, []);
 
+     /**
+     * Renders the budgets section based on current state:
+     * - Loading message if budgets are still being fetched
+     * - Message if no budgets are set
+     * - BudgetList component if budgets exist
+     *
+     * @returns {JSX.Element} JSX for budgets display
+     */
     function renderBudgetsContent() {
         if (!budgets) return <p className={"p-5 text-xl tracking-wide text-gray-700"}>Loading budgets...</p>;
         if (Object.keys(budgets).length === 0) return <p className={"p-5 text-xl tracking-wide text-gray-700"}> - You have not set any budgets -</p>;

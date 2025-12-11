@@ -1,6 +1,6 @@
+import os
 import sqlite3, random
 from datetime import datetime, date
-
 
 def add_random_time(dt):
     """Adds a random time to a given date."""
@@ -14,14 +14,16 @@ def add_random_time(dt):
 
 class DbCreator:
     """Create new table 'transactions' with incomes/home and at least 20 random entries per month for other categories"""
-    def __init__(self):
-        self.db_name = "finances.db"
+    def __init__(self, years: int):
+        self.db_name =  "finances.db"
 
-        self.start = date(2022, 1, 1)
+        year = datetime.now().year - years
+        self.start = date(year, 1, 1)
         self.end = datetime.now().date()
 
         self.current = self.start
         self.create_table()
+        self.create_table_budgets()
 
     def create_table(self):
         with sqlite3.connect(self.db_name) as conn:
@@ -43,6 +45,20 @@ class DbCreator:
                 "INSERT INTO transactions (amount, category_name, sub_category, date) VALUES (?, ?, ?, ?)",
                 (round(amount,2), cat, sub, date)
             )
+
+    def create_table_budgets(self):
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS budgets (
+                category_name TEXT NOT NULL UNIQUE,
+                'limit' REAL NOT NULL,
+                last_reset_month text
+            )
+            ''')
+
+            conn.commit()
 
     def run_creator(self):
         categories = {

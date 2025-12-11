@@ -1,6 +1,15 @@
 import {useEffect, useState} from "react";
 import Toast from "./Toast.jsx";
 
+/**
+ * Form component to delete a selected budget.
+ * Displays a toast notification on success.
+ *
+ * @param {Object} props - Component props
+ * @param {function} props.onSuccess - Callback function to refresh parent data after deletion
+ * @param {Array<{category_name: string}>} props.budgets - Array of budget objects available for deletion
+ * @returns {JSX.Element} Delete budget form
+ */
 export default function DeleteBudgetForm({onSuccess, budgets}) {
     const [category_name, setCategoryName] = useState({
         category_name: '',
@@ -10,6 +19,7 @@ export default function DeleteBudgetForm({onSuccess, budgets}) {
         setToastState(prev => ({ ...prev, show: false }));
     };
 
+    // Handle form submission to delete the selected budget
     const handleSubmit = async e => {
         e.preventDefault();
         const response = await fetch(`http://localhost:5000/api/budgets/${category_name}`,

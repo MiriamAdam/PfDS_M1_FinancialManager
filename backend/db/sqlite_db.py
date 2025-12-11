@@ -1,3 +1,4 @@
+import os
 import sqlite3
 
 from backend.model import Transaction
@@ -6,11 +7,13 @@ from backend.model import Transaction
 class SqliteDb:
     def __init__(self, db_name='finances.db'):
         """
-        Initializes database and creates transactions table and budget table if it doesn't exist.
+        Initializes database and creates finances.db in folder backend,
+        transactions table and budget table if they don't exist.
 
         :param db_name: Name of the SQLite database file (default: finances.db)
         """
         self.db_name = db_name
+
         self._create_table_transactions()
         self._create_table_budgets()
 

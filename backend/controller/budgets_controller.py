@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from backend.model import SqliteDb, Category, Budget
+from backend.db import SqliteDb
+from backend.model import Category, Budget
 
 
 class BudgetsController:

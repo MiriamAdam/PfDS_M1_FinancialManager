@@ -1,6 +1,15 @@
 import {useEffect, useState} from "react";
 import Toast from "./Toast.jsx";
 
+/**
+ * Form component to add a new transaction.
+ * Supports selecting a category, sub-category, and specifying an amount.
+ * Displays success or error toast messages on submission.
+ *
+ * @param {Object} props - Component props
+ * @param {function} props.onSuccess - Callback invoked after successful transaction creation
+ * @returns {JSX.Element} AddTransactionForm component
+ */
 export default function AddTransactionForm({onSuccess}) {
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -14,12 +23,19 @@ export default function AddTransactionForm({onSuccess}) {
     const [toastType, setToastType] = useState("error");
     const [showToast, setShowToast] = useState(false);
 
+    // Fetch categories on component mount
     useEffect(() => {
         fetch('http://localhost:5000/api/categories')
             .then(res => res.json())
             .then(data => setCategories(data));
     }, []);
 
+    /**
+     * Handles category selection change.
+     * Updates selected category and its sub-categories.
+     *
+     * @param {Event} e - Change event from category select
+     */
     const handleCategoryChange = (e) => {
         const category = e.target.value;
         setSelectedCategory(category);
@@ -30,6 +46,12 @@ export default function AddTransactionForm({onSuccess}) {
         setSubCategories(categoryObj ? categoryObj.sub_categories : []);
     };
 
+    /**
+     * Handles form submission.
+     * Sends POST request to create a new transaction and displays toast messages.
+     *
+     * @param {Event} e - Form submission event
+     */
     const handleSubmit = async e => {
         e.preventDefault();
         const response = await fetch('http://localhost:5000/api/transactions', {

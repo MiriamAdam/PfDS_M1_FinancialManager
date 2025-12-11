@@ -1,13 +1,28 @@
-import {categoryIcons} from "../../categoryIcons.js";
+import {categoryIcons} from "../config/categoryIcons.js";
 import React, {useEffect, useState} from "react";
 import AddTransactionForm from "../components/AddTransactionForm.jsx";
 import {useTransactions} from "../components/TransactionsContext.jsx";
-
+/**
+ * Transaction component.
+ *
+ * Displays all transactions, offers a filter by category
+ * and a form for adding new transactions.
+ *
+ * - Loads the categories from the backend
+ * - Allows transactions to be filtered by category
+ * - Displays the icon, subcategory, date, and amount of each transaction
+ *
+ * @component
+ * @returns {JSX.Element} Rendered transactions view
+ */
 export default function Transactions() {
     const {transactions, reload} = useTransactions();
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("");
 
+    /**
+     * Loads the categories from the backend during the first render.
+     */
     useEffect(() => {
         fetch("http://localhost:5000/api/categories")
             .then(r => r.json())
@@ -15,6 +30,11 @@ export default function Transactions() {
             .catch(err => console.error(err));
     }, [])
 
+    /**
+     * Handler for changing the selected category.
+     * Sets the state `selectedCategory` and reloads the corresponding transactions.
+     * @param {React.ChangeEvent<HTMLSelectElement>} e - Change event of select field
+     */
     const handleCategoryChange = (e) => {
         const category = e.target.value;
         setSelectedCategory(category);

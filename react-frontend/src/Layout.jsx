@@ -5,7 +5,7 @@ export default function Layout({children}) {
         <div className="grid grid-rows-[auto_1fr_auto] grid-cols-[20%_1fr] min-h-screen">
             <div className="col-span-2 flex flex-row border-b-2 border-gray-200 text-xl items-center" >
                 <img src={'logo.svg'} alt="logo" className="w-25 p-5"/>
-                <div className=" ml-5">Phyton for Data Science - 1. Meilenstein</div>
+                <div className=" ml-5">Python for Data Science - 1. Meilenstein</div>
                 <div className=" ml-10">Aufgabe 1 – Applikation: Finanzmanager</div>
 
             </div>

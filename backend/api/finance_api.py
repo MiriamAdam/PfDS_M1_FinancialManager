@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
 
-from backend.services import transactions_service, reports_service,budgets_service, db_creator
+from backend.services import transactions_service, reports_service,budgets_service
 from backend.model.category import Category
 
 app = Flask(__name__)
@@ -14,11 +14,6 @@ CORS(app, resources={
         "allow_headers": ["Content-Type"]
     }
 })
-
-# If you have to create a new database 'finances.db' for testing, delete the old file,
-# uncomment the following command (line 30) and run flask once.
-# After that you have to make the line commented out again.
-#db_creator.run_creator()
 
 @app.route('/api/chart/monthly-income-share-chart', methods=['GET'])
 def get_monthly_income_share_chart():
@@ -32,14 +27,14 @@ def get_monthly_income_share_chart():
         month = int(request.args.get('month', datetime.now().month))
 
         img = reports_service.get_monthly_income_share_chart_img(year, month)
+        img.seek(0)
 
-        response = make_response(send_file(img, mimetype='image/png'))
-        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
-        response.headers['Access-Control-Allow-Methods'] = 'GET'
-        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-
-        return response
+        return send_file(
+            img,
+            mimetype='image/png',
+            as_attachment=False,
+            download_name='spending.png',
+        )
 
     except Exception as e:
         print(f"Chart error: {e}")
@@ -60,14 +55,14 @@ def get_monthly_spending_share_chart():
         month = int(request.args.get('month', datetime.now().month))
 
         img = reports_service.get_monthly_spending_share_chart_img(year, month)
+        img.seek(0)
 
-        response = make_response(send_file(img, mimetype='image/png'))
-        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
-        response.headers['Access-Control-Allow-Methods'] = 'GET'
-        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-
-        return response
+        return send_file(
+            img,
+            mimetype='image/png',
+            as_attachment=False,
+            download_name='spending.png',
+        )
 
     except Exception as e:
         print(f"Chart error: {e}")
@@ -85,14 +80,14 @@ def get_monthly_summary_chart():
     """
     try:
         img = reports_service.get_monthly_summary_chart_img()
+        img.seek(0)
 
-        response = make_response(send_file(img, mimetype='image/png'))
-        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
-        response.headers['Access-Control-Allow-Methods'] = 'GET'
-        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-
-        return response
+        return send_file(
+            img,
+            mimetype='image/png',
+            as_attachment=False,
+            download_name='spending.png',
+        )
 
     except Exception as e:
         print(f"Chart error: {e}")
@@ -110,14 +105,14 @@ def get_bar_chart():
     """
     try:
         img = reports_service.get_bar_chart_img()
+        img.seek(0)
 
-        response = make_response(send_file(img, mimetype='image/png'))
-        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
-        response.headers['Access-Control-Allow-Methods'] = 'GET'
-        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-
-        return response
+        return send_file(
+            img,
+            mimetype='image/png',
+            as_attachment=False,
+            download_name='spending.png',
+        )
 
     except Exception as e:
         print(f"Chart error: {e}")

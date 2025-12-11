@@ -1,6 +1,15 @@
 import {useEffect, useState} from "react";
 import Toast from "./Toast.jsx";
 
+/**
+ * Form component to add a new budget for a category.
+ * Only expense categories (excluding "Sales" and "Income") are available.
+ * Displays success or error toast messages on submission.
+ *
+ * @param {Object} props - Component props
+ * @param {function} props.onSuccess - Callback invoked after successfully adding a budget
+ * @returns {JSX.Element} AddBudgetForm component
+ */
 export default function AddBudgetForm({onSuccess}) {
     const [categories, setCategories] = useState([]);
     const [formData, setFormData] = useState({
@@ -11,6 +20,7 @@ export default function AddBudgetForm({onSuccess}) {
     const [toastType, setToastType] = useState("error");
     const [showToast, setShowToast] = useState(false);
 
+    // Fetch expense categories on component mount
     useEffect(() => {
         fetch('http://localhost:5000/api/categories')
             .then(res => res.json())
@@ -22,11 +32,23 @@ export default function AddBudgetForm({onSuccess}) {
             .catch(err => console.log(err));
     }, []);
 
+     /**
+     * Handles category selection change.
+     * Resets the limit field when category changes.
+     *
+     * @param {Event} e - Change event from category select
+     */
     const handleCategoryChange = (e) => {
         const category_name = e.target.value;
         setFormData({...formData, category_name, limit: ''});
     }
 
+    /**
+     * Handles form submission.
+     * Sends POST request to add a new budget and displays toast messages.
+     *
+     * @param {Event} e - Form submission event
+     */
     const handleSubmit = async e => {
         e.preventDefault();
         const response = await fetch('http://localhost:5000/api/budgets', {
