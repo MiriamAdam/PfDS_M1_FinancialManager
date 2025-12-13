@@ -1,3 +1,12 @@
+# Systembeschreibung Finanzmanager
+
+
+
+
+
+
+Die Flask-Routen wurden im UML-Diagramm als Controller-Klassen abstrahiert dargestellt, um die logische Struktur der API unabhängig vom verwendeten Framework zu modellieren.
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

@@ -4,8 +4,8 @@ from backend.db import SqliteDb
 from backend.model import Category, Budget
 
 
-class BudgetsController:
-    """Controller for setting, updating and deleting budgets from the database."""
+class BudgetsService:
+    """Service for setting, updating and deleting budgets from the database."""
     def __init__(self):
         self.storage = SqliteDb()
         self.budgets: dict[Category, Budget] = {}
@@ -18,6 +18,24 @@ class BudgetsController:
             if category:
                 self.budgets[category] = Budget(category, limit)
         self.ensure_budgets_are_current()
+
+    def get_all_budgets(self):
+        result = []
+
+        for category, budget in self.budgets.items():
+            category_name = category.category_name
+            current_spent_amount = self.get_current_spent_amount(category_name)
+
+            budget.spent = current_spent_amount
+
+            result.append({
+                'category_name': category_name,
+                'limit': budget.limit,
+                'spent': current_spent_amount,
+                'remaining': budget.get_remaining()
+            })
+
+        return result
 
     def ensure_budgets_are_current(self):
         """Checks if a new month has begun and then resets spent amount of budgets."""
@@ -45,13 +63,15 @@ class BudgetsController:
         return sum_spent
 
 
-    def set_budget(self, category_name: str, limit: float):
+    def set_budget(self, data):
         """
         Sets the budget for a category with the given limit.
 
-        :param category_name: the category of the budget
-        :param limit: the limit of the budget
+        :param data: the budget data
         """
+        category_name = data['category_name']
+        limit = float(data['limit'])
+
         category = Category.from_category_as_string(category_name)
         first_day_of_month = datetime(datetime.now().year, datetime.now().month, 1)
         transactions = self.storage.load_transactions_by_from_date(first_day_of_month, category_name)

@@ -1,11 +1,23 @@
 import os
 import sys
+from flask import Flask, request, jsonify, send_file, make_response
+from flask_cors import CORS
+
 from backend.api.finance_api import app
 from backend.db.db_creator import DbCreator
 from backend.db.sqlite_db import SqliteDb
 
 DB_NAME = "finances.db"
 
+# Flask App und CORS setup
+app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+app.register_blueprint(reports_api, url_prefix="/api/chart")
+app.register_blueprint(transactions_api, url_prefix="/api")
+app.register_blueprint(budgets_api, url_prefix="/api/budgets")
+
+# Database setup
 def setup_database_mode():
     """Asks user how to start app and initializes database."""
 
@@ -67,7 +79,7 @@ def setup_database_mode():
         SqliteDb(DB_NAME)
         print("Empty database created.")
 
-
+# Main
 if __name__ == '__main__':
     setup_database_mode()
 

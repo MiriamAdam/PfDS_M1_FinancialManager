@@ -1,21 +1,24 @@
 from backend.db import SqliteDb
 from backend.model import Transaction, Category
 
-class TransactionsController:
-    """Controller for adding and retrieving transactions from the database."""
+
+class TransactionsService:
+    """Service for adding and retrieving transactions from the database."""
     def __init__(self, budgets_service):
         self.storage = SqliteDb()
         self.budgets = budgets_service.budgets
 
 
-    def add_transaction(self, amount: float, category_name: str, sub_category: str):
+    def add_transaction(self, data):
         """
         Adds a transaction to the database if transaction doesn't exceed a set budget limit.
 
-        :param category_name: the category of the transaction
-        :param sub_category: sub_category of the transaction
-        :param amount: the transaction amount
+        :param data: transaction data
         """
+        amount = float(data['amount'])
+        category_name = data['category_name']
+        sub_category = data['sub_category']
+
         category = Category.from_category_as_string(category_name)
         budget = self.budgets.get(category)
 
@@ -32,13 +35,19 @@ class TransactionsController:
             budget.add_expense(amount)
 
 
-    def get_all_transactions(self):
+    def get_transactions(self, category_name=None):
         """
-        Returns all transactions in the database.
+        Returns a dictionary of transaction objects of the database, optionally filtered by category.
 
-        :return: a list of all transactions in the database
+        :param category_name: category of the transactions, optional
+        :return: a list of transactions in the database
         """
-        return self.storage.load_all_transactions()
+        if category_name:
+            transactions = self.storage.load_transactions_by_category(category_name)
+        else:
+            transactions = self.storage.load_all_transactions()
+
+        return [t.to_dict() for t in transactions]
 
     def get_transactions_by_date(self, exact_date=None, start_date=None, end_date=None):
         """
@@ -55,24 +64,17 @@ class TransactionsController:
         :return: a list of transactions matching the date filters
         """
         if exact_date:
-            return self.storage.load_transactions_by_exact_date(exact_date)
+            transactions = self.storage.load_transactions_by_exact_date(exact_date)
         elif start_date and end_date:
-            return self.storage.load_transactions_by_date_range(start_date, end_date)
+            transactions = self.storage.load_transactions_by_date_range(start_date, end_date)
         elif start_date:
-            return self.storage.load_transactions_by_from_date(start_date)
+            transactions = self.storage.load_transactions_by_from_date(start_date)
         elif end_date:
-            return self.storage.load_transactions_by_until_date(end_date)
+            transactions = self.storage.load_transactions_by_until_date(end_date)
         else:
-            return self.storage.load_all_transactions()
+            transactions = self.storage.load_all_transactions()
 
-    def get_transactions_by_category(self, category_name):
-        """
-        Returns all transactions for a given category.
-
-        :param category_name: category of the transactions
-        :return: list of transactions in the specified category
-        """
-        return self.storage.load_transactions_by_category(category_name)
+        return [t.to_dict() for t in transactions]
 
     def get_transactions_by_sub_category(self, sub_category):
         """
@@ -81,5 +83,16 @@ class TransactionsController:
         :param sub_category: sub_category of the transactions
         :return: a list of transactions of the given sub_category
         """
-        return self.storage.load_transactions_by_sub_category(sub_category)
+        transactions = self.storage.load_transactions_by_sub_category(sub_category)
 
+        return [t.to_dict() for t in transactions]
+
+    def get_all_categories(self):
+        return [
+            {
+                "category_name": cat.category_name,
+                "sub_categories": cat.sub_categories,
+                "is_income": cat.is_income
+            }
+            for cat in Category
+        ]

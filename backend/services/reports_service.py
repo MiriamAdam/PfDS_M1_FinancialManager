@@ -10,13 +10,13 @@ import matplotlib.dates as mdates
 from backend.model import Category
 
 
-class ReportsController:
+class ReportsService:
     """
-    Controller class for creating plots with matplotlib and collecting data with pandas.
+    Service class for creating plots with matplotlib and collecting data with pandas.
     """
     def __init__(self, budgets_service, transactions_service):
         """
-        Initializes ReportsController object with access to budgets service and transactions service.
+        Initializes ReportsService object with access to budgets service and transactions service.
         """
         self.budgets = budgets_service
         self.transactions = transactions_service
