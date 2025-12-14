@@ -16,7 +16,7 @@ export default function Layout({children}) {
                 <a href={'/reports'} className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100">Reports</a>
             </nav>
             <div className="bg-blue-50">{children}</div>
-            <div className="col-span-2 p-5 pl-10 border-t-2 border-gray-200 text-base">bearbeitet von Miriam Adam, Wintersemester 2025/2026, B.Sc. Internationaler Frauenstudiengang Informatik, HS Bremen</div>
+            <div className="col-span-2 p-5 pl-10 border-t-2 border-gray-200 text-base">erstellt von Miriam Adam, Wintersemester 2025/2026, B.Sc. Internationaler Frauenstudiengang Informatik, HS Bremen</div>
         </div>
     )
 }

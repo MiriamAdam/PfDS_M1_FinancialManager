@@ -1,9 +1,11 @@
 import os
 import sys
-from flask import Flask, request, jsonify, send_file, make_response
+from flask import Flask
 from flask_cors import CORS
 
-from backend.api.finance_api import app
+from backend.api.budgets_api import budgets_api
+from backend.api.reports_api import reports_api
+from backend.api.transactions_api import transactions_api
 from backend.db.db_creator import DbCreator
 from backend.db.sqlite_db import SqliteDb
 
@@ -79,9 +81,10 @@ def setup_database_mode():
         SqliteDb(DB_NAME)
         print("Empty database created.")
 
-# Main
-if __name__ == '__main__':
+def main():
     setup_database_mode()
-
     print("\nStarte Flask-Server...")
     app.run(debug=False, port=5000)
+
+if __name__ == '__main__':
+    main()

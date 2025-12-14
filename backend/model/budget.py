@@ -1,7 +1,7 @@
 from backend.model import Category
 
 class Budget:
-    """Defines a budget for a category.."""
+    """Defines a budget for a category."""
     def __init__(self, category: Category, limit: float, spent=0.0):
         """
         Initializes a budget with:
@@ -17,7 +17,7 @@ class Budget:
     def add_expense(self, amount: float):
         self.spent += amount
 
-    def get_remaining(self) -> float:
+    def get_remaining(self):
         return self.limit - self.spent
 
     def reset_spent(self):

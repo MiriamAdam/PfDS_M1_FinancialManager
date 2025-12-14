@@ -21,6 +21,60 @@ class ReportsService:
         self.budgets = budgets_service
         self.transactions = transactions_service
 
+    def _signed_amount(self, t):
+        """Amounts of transactions are saved absolute. This method adds a minus to negative amounts."""
+        category = Category.from_category_as_string(t.category_name)
+        return t.amount if category.is_income else -t.amount
+
+    def get_monthly_summary_chart_img(self):
+        """
+        Creates an account balance chart for the last 30 days with matplotlib as png-image.
+        """
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+
+        previous_transactions = self.transactions.get_transactions_by_date(end_date=start_date)
+        initial_balance = sum(self._signed_amount(t) for t in previous_transactions)
+
+        transactions_last_30_days = self.transactions.get_transactions_by_date(start_date=start_date,
+                                                                                  end_date=end_date)
+
+        df = pd.DataFrame([{
+            'date': t.date,
+            'amount': self._signed_amount(t)
+        } for t in transactions_last_30_days])
+
+        df['date'] = df['date'].dt.normalize()
+        df['balance'] = df['amount'].cumsum() + initial_balance
+        daily_balance_transactions = df.groupby('date')['balance'].last()
+        date_range = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
+        daily_balance = daily_balance_transactions.reindex(date_range)
+        daily_balance.iloc[0] = initial_balance
+        daily_balance = daily_balance.ffill()
+        daily_balance.iloc[0] = initial_balance
+
+        plt.figure(figsize=(12, 6))
+        plt.plot(date_range, daily_balance,
+                 marker='o', linewidth=2.5, markersize=5,
+                 color='#2196F3', label='Balance')
+
+        plt.title('Account Balance - Last 30 Days',
+                  fontsize=16, fontweight='bold', pad=20)
+        plt.xlabel('Date', fontsize=12)
+        plt.ylabel('Balance (€)', fontsize=12)
+        plt.grid(True, alpha=0.3, linestyle='--')
+
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
+        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))
+        plt.xticks(rotation=45, ha='right')
+
+        img = io.BytesIO()
+        plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
+        img.seek(0)
+        plt.close()
+
+        return img
+
     def get_bar_chart_img(self):
         """
         Creates a bar-chart that shows each set budget in relation to its spent amount in the current month
@@ -39,14 +93,14 @@ class ReportsService:
                 data_for_df.append({
                     'category': t.category_name,
                     'date': t.date,
-                    'amount': self.signed_amount(t)
+                    'amount': t.amount
                 })
 
         df = pd.DataFrame(data_for_df)
 
         budget_limits = {
             category.category_name: budget.limit
-            for category, budget in self.budgets.budgets.items()
+            for category, budget in self.budgets.get_all_budget_objects()
         }
 
         df_grouped = df.groupby('category')['amount'].sum()
@@ -83,7 +137,7 @@ class ReportsService:
             limit = budget_limits.get(cat)
 
             if limit is not None:
-                limit_values.append(-limit)
+                limit_values.append(limit)
             else:
                 limit_values.append(0)
         plt.hlines(
@@ -98,8 +152,7 @@ class ReportsService:
         legend_handles = [
             Patch(facecolor='green', label='less than 50% spent'),
             Patch(facecolor='yellow', label='50% - 80% spent'),
-            Patch(facecolor='red', label='80% or more spent'),
-            Patch(facecolor='grey', label='no budget limit')
+            Patch(facecolor='red', label='80% or more spent')
         ]
 
         limit_line_handle, = plt.plot(
@@ -114,10 +167,9 @@ class ReportsService:
 
         plt.legend(handles=legend_handles, loc='upper left', bbox_to_anchor=(1.05, 1), title='Legend')
 
-        plt.title('Already spent amounts of budget limits in current month:')
+        plt.title('Amounts already spent from budget limits in current month:', fontweight='bold', pad=20)
         plt.ylabel('Amount (€)')
         plt.xticks(rotation=45, ha='right')
-        plt.gca().invert_yaxis()
 
         img = io.BytesIO()
         plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
@@ -145,19 +197,34 @@ class ReportsService:
         labels = spending_data.keys()
         sizes = spending_data.values()
 
+        formatted_sizes = [f"{s:.2f} €" for s in sizes]
+        custom_labels = [f"{key} ({value})" for key, value in zip(labels, formatted_sizes)]
+
+        total_sum = sum(sizes)
+        formatted_total =  f"{total_sum:,.2f} €"
+
         fig, ax = plt.subplots(figsize=(8, 8))
+        ax.text(
+            0, 0,
+            f"Total spending: \n{formatted_total}",
+            ha='center',
+            va='center',
+            fontsize=14,
+            fontweight='bold',
+            color='dimgray'
+        )
         ax.pie(
             sizes,
-            labels=labels,
+            labels=custom_labels,
             autopct='%1.1f%%',
             startangle=90,
-            wedgeprops={'width': 0.3}
+            wedgeprops={'width': 0.3},
+            pctdistance=0.85
+
         )
 
-        plt.title(f'Expenditure shares for {month:02d}.{year}')
+        plt.title(f'Expenditure shares for {month:02d}.{year}', fontweight='bold', pad=20, fontsize=16)
         ax.axis('equal')
-
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0, 0.5, 1))
 
         img = io.BytesIO()
         plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
@@ -186,19 +253,34 @@ class ReportsService:
         labels = income_data.keys()
         sizes = income_data.values()
 
+        formatted_sizes = [f"{s:.2f} €" for s in sizes]
+        custom_labels = [f"{key} ({value})" for key, value in zip(labels, formatted_sizes)]
+
+        total_sum = sum(sizes)
+        formatted_total =  f"{total_sum:,.2f} €"
+
         fig, ax = plt.subplots(figsize=(8, 8))
+        ax.text(
+            0, 0,
+            f"Total income: \n{formatted_total}",
+            ha='center',
+            va='center',
+            fontsize=14,
+            fontweight='bold',
+            color='dimgray'
+        )
         ax.pie(
             sizes,
-            labels=labels,
+            labels=custom_labels,
             autopct='%1.1f%%',
             startangle=90,
-            wedgeprops={'width': 0.3}
+            wedgeprops={'width': 0.3},
+            pctdistance=0.85
         )
 
-        plt.title(f'Income shares for {month:02d}.{year}')
+        plt.title(f'Income shares for {month:02d}.{year}', fontweight='bold', pad=20, fontsize=16)
         ax.axis('equal')
 
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0, 0.5, 1))
 
         img = io.BytesIO()
         plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
@@ -206,58 +288,3 @@ class ReportsService:
         plt.close()
 
         return img
-
-    def get_monthly_summary_chart_img(self):
-        """
-        Creates an account balance chart for the last 30 days with matplotlib as png-image.
-        """
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
-
-        previous_transactions = self.transactions.get_transactions_by_date(end_date=start_date)
-        initial_balance = sum(self.signed_amount(t) for t in previous_transactions)
-
-        transactions_last_30_days = self.transactions.get_transactions_by_date(start_date=start_date,
-                                                                                  end_date=end_date)
-
-        df = pd.DataFrame([{
-            'date': t.date,
-            'amount': self.signed_amount(t)
-        } for t in transactions_last_30_days])
-
-        df['date'] = df['date'].dt.normalize()
-        df['balance'] = df['amount'].cumsum() + initial_balance
-        daily_balance_transactions = df.groupby('date')['balance'].last()
-        date_range = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
-        daily_balance = daily_balance_transactions.reindex(date_range)
-        daily_balance.iloc[0] = initial_balance
-        daily_balance = daily_balance.ffill()
-        daily_balance.iloc[0] = initial_balance
-
-        plt.figure(figsize=(12, 6))
-        plt.plot(date_range, daily_balance,
-                 marker='o', linewidth=2.5, markersize=5,
-                 color='#2196F3', label='Balance')
-
-        plt.title('Account Balance - Last 30 Days',
-                  fontsize=16, fontweight='bold', pad=20)
-        plt.xlabel('Date', fontsize=12)
-        plt.ylabel('Balance (€)', fontsize=12)
-        plt.grid(True, alpha=0.3, linestyle='--')
-
-        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
-        plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))
-        plt.xticks(rotation=45, ha='right')
-
-        img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches='tight', dpi=100)
-        img.seek(0)
-        plt.close()
-
-        return img
-
-    # helping methods:
-    def signed_amount(self, t):
-        """Amounts of transactions are saved absolute. This method adds a minus to negative amounts."""
-        category = Category.from_category_as_string(t.category_name)
-        return t.amount if category.is_income else -t.amount

@@ -22,10 +22,10 @@ class DbCreator:
         self.end = datetime.now().date()
 
         self.current = self.start
-        self.create_table()
-        self.create_table_budgets()
+        self._create_table()
+        self._create_table_budgets()
 
-    def create_table(self):
+    def _create_table(self):
         with sqlite3.connect(self.db_name) as conn:
             cur = conn.cursor()
             cur.execute("""
@@ -46,7 +46,7 @@ class DbCreator:
                 (round(amount,2), cat, sub, date)
             )
 
-    def create_table_budgets(self):
+    def _create_table_budgets(self):
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 

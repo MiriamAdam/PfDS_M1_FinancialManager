@@ -20,6 +20,7 @@ class BudgetsService:
         self.ensure_budgets_are_current()
 
     def get_all_budgets(self):
+        """Returns a dictionary of all budgets in the database."""
         result = []
 
         for category, budget in self.budgets.items():
@@ -36,6 +37,10 @@ class BudgetsService:
             })
 
         return result
+
+    def get_all_budget_objects(self):
+        """Returns all budgets in the database as budget objects."""
+        return self.budgets.items()
 
     def ensure_budgets_are_current(self):
         """Checks if a new month has begun and then resets spent amount of budgets."""
@@ -88,3 +93,12 @@ class BudgetsService:
         if category in self.budgets:
             del self.budgets[category]
             self.storage.delete_budget(category_string)
+
+    def get_budget_for_category(self, category):
+        """
+            Returns the Budget object for a given Category.
+
+            :param category: the category object
+            :return: the Budget object or None
+            """
+        return self.budgets.get(category)

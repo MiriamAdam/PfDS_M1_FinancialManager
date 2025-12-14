@@ -83,7 +83,7 @@ export default function Transactions() {
                                 year: 'numeric'
                             })}
                         </span>
-                       <span className="font-bold pl-5 w-30 text-right">{t.amount.toFixed(2)} €</span>
+                       <span className={`font-bold pl-5 w-30 text-right ${t.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>{t.amount.toFixed(2)} €</span>
                     </div>
                 </li>
                 )}

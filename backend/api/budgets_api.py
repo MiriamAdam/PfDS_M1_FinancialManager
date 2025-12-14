@@ -9,7 +9,7 @@ from flask import jsonify, request, Blueprint
 from backend.app_context import budgets_service
 budgets_api = Blueprint('budgets_api', __name__)
 
-@budgets_api.route('/budgets', methods=['POST'])
+@budgets_api.route('/', methods=['POST'])
 def set_budget():
     """Set a budget for a category"""
     try:
@@ -28,11 +28,11 @@ def set_budget():
         return jsonify({'error': str(e)}), 500
 
 
-@budgets_api.route('/api/budgets', methods=['GET'])
+@budgets_api.route('/', methods=['GET'])
 def get_all_budgets():
     """Gets all budgets from BudgetsService."""
     try:
-        budgets = budgets_service.BudgetsService.get_all_budgets()
+        budgets = budgets_service.get_all_budgets()
 
         return jsonify(budgets), 200
 
@@ -40,7 +40,7 @@ def get_all_budgets():
         return jsonify({'error': str(e)}), 500
 
 
-@budgets_api.route('/api/budgets/<category_name>', methods=['DELETE'])
+@budgets_api.route('/<category_name>', methods=['DELETE'])
 def delete_budget(category_name: str):
     """Deletes a budget for a category"""
     try:

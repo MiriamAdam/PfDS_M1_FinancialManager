@@ -11,6 +11,7 @@ from backend.app_context import reports_service
 
 reports_api = Blueprint('reports_api', __name__)
 
+
 @reports_api.route('/monthly-income-share-chart', methods=['GET'])
 def get_monthly_income_share_chart():
     """

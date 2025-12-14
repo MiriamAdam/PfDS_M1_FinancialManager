@@ -26,7 +26,7 @@ def get_transactions():
     """
     category = request.args.get('category')
     try:
-        transactions = transactions_service.get_transactions(category)
+        transactions = transactions_service.get_transactions(category, as_dict=True)
         return jsonify(transactions), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -42,7 +42,8 @@ def get_transactions_by_date():
         transactions = transactions_service.get_transactions_by_date(
             exact_date=exact_date,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            as_dict=True
         )
 
         return jsonify(transactions), 200
@@ -58,7 +59,7 @@ def get_transactions_by_sub_cat():
         if not sub_category:
             return jsonify({'error': 'sub_category parameter required'}), 400
 
-        transactions = transactions_service.get_transactions_by_sub_category(sub_category)
+        transactions = transactions_service.get_transactions_by_sub_category(sub_category, as_dict=True)
         return jsonify(transactions), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

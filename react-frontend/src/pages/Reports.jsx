@@ -93,7 +93,7 @@ export default function Reports() {
     return (
         <div className="flex flex-col items-center">
             {chartUrl && (
-            <div className="bg-white pl-5 pt-5 pb-5 pr-10 mt-15 rounded-lg shadow-lg w-[90%]">
+            <div className="bg-white pl-5 pt-5 pb-5 pr-5 mt-15 rounded-lg shadow-lg w-[80%]">
                 <img
                     key={chartUrl}
                     src={chartUrl}
@@ -135,7 +135,7 @@ export default function Reports() {
                 </div>
             </div>
             {monthlySpendingShareChartUrl && (
-            <div className="bg-white pl-5 pt-5 pb-5 pr-10 mt-3 rounded-lg shadow-lg w-[90%]">
+            <div className="bg-white pl-5 pt-5 pb-5 pr-5 mt-3 rounded-lg shadow-lg w-[80%]">
                 <img
                     key={monthlySpendingShareChartUrl}
                     src={monthlySpendingShareChartUrl}
@@ -146,7 +146,7 @@ export default function Reports() {
             </div>
             )}
              {monthlyIncomeShareChartUrl && (
-            <div className="bg-white pl-5 pt-5 pb-5 pr-10 mt-3 mb-10 rounded-lg shadow-lg w-[90%]">
+            <div className="bg-white pl-5 pt-5 pb-5 pr-5 mt-3 mb-10 rounded-lg shadow-lg w-[80%]">
                 <img
                     key={monthlyIncomeShareChartUrl}
                     src={monthlyIncomeShareChartUrl}

@@ -24,11 +24,3 @@ class Transaction:
                 self.date = datetime.strptime(date, '%Y-%m-%d')
         else:
             self.date = date
-
-    def to_dict(self):
-        return {
-            "amount": self.amount,
-            "category_name": self.category_name,
-            "sub_category": self.sub_category,
-            "date": str(self.date)
-        }
