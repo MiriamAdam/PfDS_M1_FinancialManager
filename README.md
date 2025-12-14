@@ -25,7 +25,7 @@ Um die Anwendung zu starten, müssen Backend und Frontend in zwei separaten Term
    >
    > venv\Scripts\activate
 
-      - Mac / Linux:
+    - Mac / Linux:
     > python -m venv venv
    > 
    > source venv/bin/activate
@@ -66,45 +66,99 @@ Datenbank gestartet werden soll. Bei Auswahl (2.) muss die Anzahl der Jahre, fü
 
 ### Anwendungsbeschreibung
 
-Die Anwendung hat vier Pages, die auf der linken Seite in einer horizontalen Navigationsleiste ausgewählt werden können.
+Die Anwendung ist auf Englisch und hat vier Pages, die auf der linken Seite in einer horizontalen Navigationsleiste 
+ausgewählt werden können.
 Auf der Startseite der Anwendung wird eine Übersicht über den aktuellen Finanzstatus angezeigt.
 Unter dem Kontostand befindet sich ein tagesaktuelles Liniendiagramm, dass den Verlauf des Kontostands der 
 letzten 30 Tage darstellt. Darunter werden die letzten zehn Transaktionen angezeigt.
 
-![balance chart](/assets/balance_chart.png)
+![overview](/assets/overview_sm.png)
 
-Auf der Seite *Transactions* befindet sich im oberen Bereich ein Formular, mit dem Transaktionen angelegt werden können.
+Auf der Seite **Transactions** befindet sich im oberen Bereich ein Formular, mit dem Transaktionen angelegt werden können.
 Nach Auswahl der Kategorie kann die passende Unterkategorie ausgewählt und der entsprechende Betrag eingegeben werden.
 Mit einem Klick auf *Add transaction* wird die Transaktion entgegengenommen und erscheint als neuste Buchung im darunter
 liegenden Fenster. Hier sind alle bisher getätigten Transaktionen von der aktuellsten zur ältesten Buchung aufgelistet. 
 Mit dem Formular darüber kann nach Kategorien gefiltert werden.
 
-![transaction menu](/assets/transactions.png)
+![transaction menu](/assets/transactions_sm.png)
 
-Befindet man sich auf der Seite *Budgets* sieht man im oberen Bereich, ob schon Budgets für bestimmte Kategorien angelegt
+Befindet man sich auf der Seite **Budgets** sieht man im oberen Bereich, ob schon Budgets für bestimmte Kategorien angelegt
 sind. Für jede Kategorie kann genau ein Budget angelegt werden, das die Höhe der Ausgaben für den aktuellen Monat limitiert.
 Würde eine neue Transaktion ein gesetztes Budgetlimit überschreiten, kann die Transaktion nicht durchgeführt werden.
+Sobald ein bereits bestehendes Budget neu gesetzt wird, wird es überschrieben. Im Fenster daneben können existierende
+Budgets gelöscht werden. 
 
-![budgets](/assets/budgets.png)
+![budgets](/assets/budgets_sm.png)
+
+Auf der Seite **Reports** befinden sich drei Grafiken, die sich dynamisch an die monatlichen Ausgaben anpassen. Das 
+oberste Chart ist ein Balkendiagramm. Jeder Balken steht für ein gesetztes Budget. Je nachdem wie viel Geld bezogen auf das 
+Budgetlimit bereits ausgegeben wurde, erscheint der Balken in grün (weniger als 50 % ausgegeben), gelb (50 -80 % ausgegeben)
+und rot (über 80 % ausgegeben). Eine gestrichelte Linie gibt das Budgetlimit pro Balken an.
+
+![bar chart](/assets/bar_chart_sm.png)
+
+Für die beiden Doughnut-Charts darunter kann ausgewählt werden, für welchen Monat in welchem Jahr sie angezeigt werden sollen.
+Default wird der aktuelle Monat angezeigt.
+In der Mitte der Diagramme stehen jeweils die Gesamtausgaben/Gesamteinnahmen des Monats. 
+Auf den Wedges befindet sich der prozentuale Anteil der Kategorie am gesamten Betrag und außen steht der 
+Kategoriename mit den jeweiligen Ausgaben/Einnahmen in Euro.
+
+![doughnut chart spending](/assets/spending_chart_sm.png)
+![doughnut chart income](/assets/income_chart_sm.png)
 
 ## Systembeschreibung für Entwickler*innen
 
-
-
 ### UML-Diagramm
 
-Das UML-Klassendiagramm stellt die statische Struktur des Finanzverwaltungssystems dar und zeigt die zentralen Klassen, ihre Attribute, Methoden sowie die Beziehungen zwischen ihnen. Die Architektur orientiert sich an einer Schichtenarchitektur, die eine klare Trennung von Zuständigkeiten ermöglicht.
+Das UML-Klassendiagramm stellt die statische Struktur des Finanzverwaltungssystems dar und zeigt die zentralen Klassen, 
+ihre Attribute, Methoden sowie die Beziehungen zwischen ihnen. Die Architektur orientiert sich an einer 
+Schichtenarchitektur, die eine klare Trennung von Zuständigkeiten ermöglicht.
+
+![uml diagramm](/assets/uml.png)
+<div style="text-align: right">(erstellt mit https://plantumlonlineeditor.com/)</div>
 
 #### Model-Schicht
 
 Die Model-Schicht enthält die fachlichen Datenobjekte des Systems.
 
-Die Klasse Transaction repräsentiert eine einzelne finanzielle Transaktion.
-Sie enthält Attribute wie Betrag, Kategorie, Unterkategorie und Datum.
-Diese Klasse dient ausschließlich als Datencontainer und enthält keine Logik zur Datenpersistenz.
+Die Klasse **Transaction** repräsentiert eine einzelne finanzielle Transaktion. Sie dient ausschließlich als 
+Datencontainer und enthält keine Logik zur Datenpersistenz. Ihre Hauptaufgabe ist die Bündelung aller 
+relevanten Attribute, die eine Transaktion eindeutig beschreiben, bevor diese von anderen Modulen 
+(z.B. API-Endpunkten oder Datenbank-Handlern) weiterverarbeitet, persistiert oder in Berichten aggregiert werden.
+Sie enthält die folgenden Attribute:
 
-Die Klasse Category (bzw. ein entsprechendes Enum) modelliert die möglichen Kategorien von Transaktionen.
-Sie stellt eine zentrale, typisierte Definition der Kategorien dar und wird von anderen Klassen zur Konsistenz der Daten verwendet.
+- *amount*, float --> Betrag der Transaktion, wird immer als Absolutbetrag gespeichert und auf zwei Dezimalstellen gerundet
+    
+- *category_name*, str --> der Name der Hauptkategorie (z.B. Income, Food, Education...)
+
+- *sub_category*, str --> der Name der Unterkategorie (für Food z.B. Mensa, Bakery, Rewe...)
+
+- *date*, datetime --> der genaue Zeitpunkt der Transaktion im Format 'YYYY-MM-DDTHH:MM:SS' 
+
+Die Klasse **Category** implementiert ein Enum und modelliert die möglichen Kategorien von Transaktionen.
+Sie stellt eine zentrale, typisierte Definition der Kategorien dar und wird von anderen Klassen zur Konsistenz der 
+Daten verwendet. Ihre Hauptfunktion besteht darin, die Geschäftslogik der Kategorisierung 
+(Definition, Unterkategorien, Einnahme/Ausgabe-Status) an einer zentralen Stelle zu kapseln. Jedes Mitglied des Enums
+repräsentiert eine Hauptkategorie und speichert in seinem Wert einen Tupel mit den folgenden drei Elementen:
+
+- *category_name*, str --> Anzeigename der Kategorie (z.B. Income, Food, Education...)
+- *sub_category*, List[str] --> Liste der möglichen Unterkategorien (für Food z.B. ['Mensa', 'Bakery', 'Rewe', ...])
+- *is_income*, bool --> speichert, ob Kategorie Einnahme (= True) oder Ausgabe (= False) ist, um die absolut gespeicherten
+Beträge richtig verwenden zu können
+
+Um den Zugriff auf die Tupel zu ermöglichen, enthält die Klasse drei @property_Methoden:
+
+- *category_name*, str --> Übergibt das Element an Tupel-Stelle 0 = Anzeigename
+- *sub_category*, List[str] --> Übergibt das Element an Tupel-Stelle 1 = Liste mit zugehörigen Unterkategorien
+- *is_income*, bool --> Übergibt das Element an Tupel-Stelle 3 = True/False
+
+Die statische Methode *from_category_as_string*(cls, category_name: str) bietet eine notwendige Suchfunktion. 
+Sie ermöglicht es anderen Teilen des Systems, ein Category-Enum-Mitglied anhand des Anzeigenamens 
+(z.B. dem in der Datenbank gespeicherten String) zu finden und das entsprechende Enum-Objekt zurückzugeben.
+
+Die Klasse **Budget** repräsentiert das monetäre Budgetlimit für eine bestimmte, vordefinierte Hauptkategorie (Category). 
+Sie dient dazu einen Überblick über den aktuellen finanziellen Status einer Kategorie zu erhalten, 
+indem sie das maximale Ausgabenlimit speichert und die bereits getätigten Ausgaben zusammenrechnet.
 
 #### Persistenz-Schicht
 

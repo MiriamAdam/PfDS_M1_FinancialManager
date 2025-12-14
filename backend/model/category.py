@@ -3,18 +3,6 @@ from typing import List
 
 class Category(Enum):
     """Enum of possible categories for transactions."""
-    #def __init__(self, category_name: str, sub_categories: List[str], is_income: bool):
-     #   """
-      #  Each category is initialized with:
-
-       # :param category_name: The display name of the main category
-        #:param sub_categories: List of sub-categories for this main category
-        #:param is_income: True if the category represents income, False otherwise
-        #"""
-        #self.category_name = category_name
-        #self.sub_categories = sub_categories
-        #self.is_income = is_income
-
     INCOME = ("Income", ['Job', 'Bonus', 'Part-time job', 'Child benefit', 'Housing benefit'], True)
     SALES = ("Sales", ['Vinted', 'kleinanzeigen', 'eBay'], True)
     FOOD = ("Food", ['Aleco', 'REWE', 'Rossmann', 'Bakery', 'Mensa'], False)
