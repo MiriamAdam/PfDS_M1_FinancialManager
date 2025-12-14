@@ -53,7 +53,7 @@ class SqliteDb:
 
     def load_all_transactions(self):
         """
-        Retrieves all transactions from the database.
+        Retrieves all transactions from the database in descending order by date.
         :return: List of Transaction instances"""
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()

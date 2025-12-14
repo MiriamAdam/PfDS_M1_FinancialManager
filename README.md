@@ -108,99 +108,207 @@ Kategoriename mit den jeweiligen Ausgaben/Einnahmen in Euro.
 
 ## Systembeschreibung für Entwickler*innen
 
+Die Anwendung wurde im Backend mit Python und dem Web-Framework Flask erstellt. Die Datenpersistenz erfolgt über SQLite. 
+Für das Frontend wurde das React-Framework in Kombination mit Vite eingerichtet.
+
 ### UML-Diagramm
 
-Das UML-Klassendiagramm stellt die statische Struktur des Finanzverwaltungssystems dar und zeigt die zentralen Klassen, 
+Das UML-Klassendiagramm stellt die grundlegende Struktur des Finanzverwaltungssystems dar und zeigt die zentralen Klassen, 
 ihre Attribute, Methoden sowie die Beziehungen zwischen ihnen. Die Architektur orientiert sich an einer 
 Schichtenarchitektur, die eine klare Trennung von Zuständigkeiten ermöglicht.
+
+Die Struktur gliedert sich von unten nach oben in vier Hauptschichten:
+
+- Domain Layer (Domänenschicht): Der Kern der Anwendung, frei von Infrastruktur.
+- Persistence Layer (Persistenzschicht): Verantwortlich für die Speicherung der Domänenobjekte.
+- Service Layer (Serviceschicht): Koordiniert Anwendungsfälle und wendet Geschäftsregeln an.
+- API Layer (Präsentationsschicht): Definiert die Schnittstelle zum Frontend.
+
+Die Abhängigkeitsrichtung ist von oben nach unten und folgt demnach dem Unabhängigkeitsprinzip. Höhere Schichten 
+können auf niedrigere Schichten zugreifen, aber niedrigere Schichten haben keine Abhängigkeiten zu höheren Schichten.
 
 ![uml diagramm](/assets/uml.png)
 <div style="text-align: right">(erstellt mit https://plantumlonlineeditor.com/)</div>
 
-#### Model-Schicht
+### Domain Layer
 
-Die Model-Schicht enthält die fachlichen Datenobjekte des Systems.
+Die Domänenschicht ist der Kern der Anwendung und enthält das **Domänenmodell**. Sie kapselt die grundlegenden 
+Geschäftsregeln und Datenobjekte des Systems (`Transaction`, `Budget`, `Category`) und ist frei von jeglicher Logik 
+zur Datenpersistenz oder Präsentation.
 
-Die Klasse **Transaction** repräsentiert eine einzelne finanzielle Transaktion. Sie dient ausschließlich als 
-Datencontainer und enthält keine Logik zur Datenpersistenz. Ihre Hauptaufgabe ist die Bündelung aller 
-relevanten Attribute, die eine Transaktion eindeutig beschreiben, bevor diese von anderen Modulen 
-(z.B. API-Endpunkten oder Datenbank-Handlern) weiterverarbeitet, persistiert oder in Berichten aggregiert werden.
-Sie enthält die folgenden Attribute:
+#### Category
 
-- *amount*, float --> Betrag der Transaktion, wird immer als Absolutbetrag gespeichert und auf zwei Dezimalstellen gerundet
-    
-- *category_name*, str --> der Name der Hauptkategorie (z.B. Income, Food, Education...)
-
-- *sub_category*, str --> der Name der Unterkategorie (für Food z.B. Mensa, Bakery, Rewe...)
-
-- *date*, datetime --> der genaue Zeitpunkt der Transaktion im Format 'YYYY-MM-DDTHH:MM:SS' 
-
-Die Klasse **Category** implementiert ein Enum und modelliert die möglichen Kategorien von Transaktionen.
-Sie stellt eine zentrale, typisierte Definition der Kategorien dar und wird von anderen Klassen zur Konsistenz der 
+Die Klasse `Category` implementiert ein Enum und modelliert die möglichen Kategorien von Transaktionen.
+Sie stellt eine zentrale Definition der Kategorien dar und wird von anderen Klassen zur Konsistenz der 
 Daten verwendet. Ihre Hauptfunktion besteht darin, die Geschäftslogik der Kategorisierung 
-(Definition, Unterkategorien, Einnahme/Ausgabe-Status) an einer zentralen Stelle zu kapseln. Jedes Mitglied des Enums
-repräsentiert eine Hauptkategorie und speichert in seinem Wert einen Tupel mit den folgenden drei Elementen:
+(Definition, Unterkategorien, Einnahme/Ausgabe-Status) an einer zentralen Stelle zu definieren. 
 
-- *category_name*, str --> Anzeigename der Kategorie (z.B. Income, Food, Education...)
-- *sub_category*, List[str] --> Liste der möglichen Unterkategorien (für Food z.B. ['Mensa', 'Bakery', 'Rewe', ...])
-- *is_income*, bool --> speichert, ob Kategorie Einnahme (= True) oder Ausgabe (= False) ist, um die absolut gespeicherten
-Beträge richtig verwenden zu können
+Jedes Mitglied des Enums repräsentiert eine Hauptkategorie und speichert in seinem Wert einen Tupel mit den 
+folgenden drei Elementen:
 
-Um den Zugriff auf die Tupel zu ermöglichen, enthält die Klasse drei @property_Methoden:
+- *category_name*, str --> Anzeigename der Kategorie (z.B. `Income`, `Food`, `Education`, ...)
+- *sub_category*, List[str] --> Liste der möglichen Unterkategorien (für `Food` z.B. [`Mensa`, `Bakery`, `Rewe`, ...])
+- *is_income*, bool --> speichert, ob Kategorie Einnahme (= `True`) oder Ausgabe (= `False`) ist, um die absolut 
+gespeicherten Beträge richtig verwenden zu können
+
+Um Zugriff auf die Tupel zu ermöglichen, enthält die Klasse drei @property_Methoden:
 
 - *category_name*, str --> Übergibt das Element an Tupel-Stelle 0 = Anzeigename
 - *sub_category*, List[str] --> Übergibt das Element an Tupel-Stelle 1 = Liste mit zugehörigen Unterkategorien
-- *is_income*, bool --> Übergibt das Element an Tupel-Stelle 3 = True/False
+- *is_income*, bool --> Übergibt das Element an Tupel-Stelle 2 = `True`/`False`
 
-Die statische Methode *from_category_as_string*(cls, category_name: str) bietet eine notwendige Suchfunktion. 
-Sie ermöglicht es anderen Teilen des Systems, ein Category-Enum-Mitglied anhand des Anzeigenamens 
-(z.B. dem in der Datenbank gespeicherten String) zu finden und das entsprechende Enum-Objekt zurückzugeben.
+Die Methode *from_category_as_string*(cls, category_name: str) ermöglicht es anderen Teilen des Systems, 
+ein Category-Enum-Mitglied anhand des Anzeigenamens (z.B. dem in der Datenbank gespeicherten String) zu finden 
+und das entsprechende Enum-Objekt zurückzugeben.
 
-Die Klasse **Budget** repräsentiert das monetäre Budgetlimit für eine bestimmte, vordefinierte Hauptkategorie (Category). 
-Sie dient dazu einen Überblick über den aktuellen finanziellen Status einer Kategorie zu erhalten, 
-indem sie das maximale Ausgabenlimit speichert und die bereits getätigten Ausgaben zusammenrechnet.
+#### Transaction
 
-#### Persistenz-Schicht
+Die Klasse `Transaction` repräsentiert eine einzelne finanzielle Transaktion. Sie dient ausschließlich als 
+Datencontainer und enthält keine Logik zur Datenpersistenz. Ihre Hauptaufgabe ist die Bündelung aller 
+relevanten Attribute, die eine Transaktion eindeutig beschreiben, bevor diese von anderen Modulen 
+(z.B. API-Endpunkten oder Datenbank-Handlern) weiterverarbeitet, persistiert oder in Berichten zusammengefasst werden.
 
-Die Persistenz-Schicht ist für den Zugriff auf die SQLite-Datenbank zuständig.
+Sie enthält die folgenden Attribute:
 
-Die Klasse SqliteDb kapselt sämtliche Datenbankoperationen.
-Sie ist verantwortlich für das Speichern, Laden, Aktualisieren und Löschen von Transaktionen sowie für die Verwaltung von Budgets.
+- *amount*, float --> Betrag der Transaktion, wird immer als Absolutbetrag gespeichert und auf zwei Dezimalstellen gerundet
+- *category_name*, str --> der Name der Hauptkategorie (z.B. `Income`, `Food`, `Education`, ...)
+- *sub_category*, str --> der Name der Unterkategorie (für `Food` z.B. `Mensa`, `Bakery`, `Rewe`...)
+- *date*, datetime --> der genaue Zeitpunkt der Transaktion im Format 'YYYY-MM-DDTHH:MM:SS'
 
-Öffentliche Methoden wie
-save_transaction(...),
-load_all_transactions(),
-load_transactions_by_date_range(...) oder
-save_budget(...)
-stellen eine klar definierte Schnittstelle für andere Schichten bereit.
+#### Budget
 
-Interne Methoden zur Initialisierung der Datenbanktabellen (z. B. _create_table_transactions() und _create_table_budgets()) sind als private Methoden implementiert und werden im Konstruktor aufgerufen.
-Diese Methoden sind Implementierungsdetails und dienen ausschließlich der technischen Initialisierung.
+Die Klasse `Budget` repräsentiert das Budgetlimit für eine bestimmte, vordefinierte Hauptkategorie (`Category`). 
+Sie dient dazu einen Überblick über den aktuellen finanziellen Status einer Kategorie mit limitiertem Budget zu erhalten, 
+indem sie das maximale Ausgabenlimit speichert und die bereits getätigten Ausgaben verfolgt.
 
-Die Persistenz-Schicht kennt die Model-Klassen, insbesondere Transaction, ist jedoch unabhängig von Controller- oder UI-Logik.
+Die Klasse enthält die folgenden Attribute:
 
-#### Controller- / Anwendungslogik
+- *category*, Category --> das zugrunde liegende Category-Objekt, für das das Budget gilt
+- *limit*, float --> der Maximalbetrag, der für diese Kategorie ausgegeben werden darf (das Budgetlimit)
+- *spent*, float --> der Betrag, der bereits für diese Kategorie ausgegeben wurde (Standardwert ist 0.0)
 
-Die Controller- bzw. Anwendungslogik nutzt die Persistenz-Schicht, um auf gespeicherte Daten zuzugreifen, und verarbeitet diese für die weitere Verwendung in der Anwendung (z. B. Anzeige, Filterung oder Auswertung).
+Die Klasse bietet folgende Methoden zur Verwaltung des Budgets:
 
-Der Zugriff erfolgt ausschließlich über die öffentlichen Methoden der Klasse SqliteDb, wodurch eine lose Kopplung zwischen Anwendungslogik und Datenbank gewährleistet wird.
+- *add_expense(amount: float)* --> Erhöht den Wert des Attributs `spent` um den übergebenen Betrag `amount`.
+Diese Methode wird verwendet, um neue Ausgaben zur Budgetverfolgung hinzuzufügen.
+- *get_remaining() -> float* --> Berechnet den noch verfügbaren Betrag im Budget.
+Die Berechnung erfolgt durch Subtraktion der bisherigen Ausgaben vom Limit: `self.limit` - `self.spent`.
+- *reset_spent()* --> Setzt den Wert des Attributs `spent` auf 0.0 zurück. Dies wird typischerweise zum Monatsanfang verwendet.
 
-Datenbank-Initialisierung (DbCreator)
+### Persistenz Layer
 
-Die Klasse DbCreator dient der Initialisierung und Befüllung der Datenbank mit Testdaten und wird ausschließlich beim Start der Anwendung in der Entwicklungsphase verwendet.
+Die Persistenzschicht ist für den Zugriff auf die SQLite-Datenbank zuständig.
 
-Sie erzeugt bei Bedarf die benötigten Tabellen und fügt realistisch simulierte Transaktionen über mehrere Jahre hinweg ein.
+#### SqliteDb
 
-Die Klasse greift direkt auf die SQLite-Datenbank zu und ist thematisch der Persistenz zuzuordnen.
+Die Klasse SqliteDb kapselt sämtliche Datenbankoperationen unter Verwendung der sqlite3-Bibliothek.
+Sie ist verantwortlich für das Speichern, Laden, Aktualisieren und Löschen von Transaktionen, 
+sowie für die Verwaltung von Budgets.
 
-Sie ist jedoch kein Bestandteil der regulären Schichtenarchitektur, da sie nicht im normalen Anwendungsablauf verwendet wird, sondern lediglich als Hilfswerkzeug zur Datenbankvorbereitung dient.
+Die öffentlichen Methoden sind die Schnittstelle für andere Schichten:
 
-Aus diesem Grund wird DbCreator entweder separat im UML-Diagramm dargestellt oder bewusst nicht in das Hauptdiagramm der Anwendungsarchitektur aufgenommen.
+- *save_transaction(transaction: Transaction)* --> speichert ein übergebenes `Transaction`-Objekt dauerhaft in der `transactions`-Tabelle
+- *load_all_transactions()* -> List[Transaction] --> ruft alle Transaktionen aus der Datenbank ab, sortiert nach Datum absteigend und 
+gibt eine Liste der `Transaction`-Objekten zurück
+- *load_transactions_by_exact_date(date: str)* -> List[Transaction] --> ruft alle Transaktionen ab, die exakt am 
+angegebenen Datum stattgefunden haben
+- *load_transactions_by_date_range(start_date: str, end_date: str)* -> List[Transaction] --> ruft alle Transaktionen ab, 
+die innerhalb des angegebenen Datumsbereichs liegen (inklusive Grenzen)
+- *load_transactions_by_from_date (start_date: str, category_name: str)* -> List[Transaction] --> ruft alle Transaktionen 
+vom Startdatum an ab. Optional wird nach `category_name` gefiltert.
+- *load_transactions_by_until_date(end_date: str)* -> List[Transaction] --> ruft alle Transaktionen bis zum Enddatum ab (inklusive Enddatum)
+- *load_transactions_by_category(category_name: str)* -> List[Transaction] --> ruft alle Transaktionen ab, die zu der 
+angegebenen Hauptkategorie gehören
+- *load_transactions_by_sub_category(sub_category: str)* -> List[Transaction] --> ruft alle Transaktionen ab, die zu der 
+angegebenen Unterkategorie gehören
+- *save_budget(category_name: str, limit: float)* --> speichert oder aktualisiert das Budgetlimit `limit` für die angegebene Kategorie
+- *get_budget_reset_month(category_name: str)*	-> str/None	--> ruft den gespeicherten Monatsstempel `last_reset_month` ab, 
+der angibt, wann das Budget zuletzt zurückgesetzt wurde
+- *update_budget_reset_month(category_name: str, month: str)* --> aktualisiert den Monatsstempel für das Budget der angegebenen Kategorie
+- *load_all_budgets()* -> Dict[str, float] --> ruft alle Budgets ab und gibt sie als Dictionary zurück, wobei der 
+Kategoriename der Schlüssel und das Limit der Wert ist
+- *delete_budget(category_name: str)* --> löscht das Budget der angegebenen Kategorie aus der Datenbank
 
-#### Zusammenfassung
+Interne Methoden zur Initialisierung der Datenbanktabellen *_create_table_transactions* und *_create_table_budgets* sind 
+als private Methoden implementiert und werden im Konstruktor aufgerufen. Sie dienen ausschließlich der 
+Initialisierung der Datenbankstruktur.
 
-Das UML-Diagramm verdeutlicht die klare Trennung zwischen Datenmodell, Persistenz und Anwendungslogik.
-Durch die Kapselung der Datenbankzugriffe in der Persistenz-Schicht sowie die Auslagerung der Datenbankinitialisierung in ein separates Hilfsmodul wird eine wartbare, erweiterbare und übersichtliche Systemstruktur erreicht.
+Die Persistenzschicht kennt die Model-Klassen (insbesondere `Transaction`), hat jedoch keine Abhängigkeiten zum
+API-Layer oder Frontend.
+
+### Setup / Utility
+
+Die Setup/Utility-Sektion dient der Initialisierung der Anwendungsumgebung und ist für die Generierung von
+Beispieldaten notwendig. Diese Komponente sit vom eigentlichen Laufzeit-Geschäftsprozess entkoppelt und dient
+der Vereinfachung des Setups.
+
+#### DbCreator
+
+Die Klasse `DbCreator` ist ein Datenbank-Creator und eine Utility-Klasse, deren Hauptaufgabe darin besteht, eine 
+funktionsfähige Datenbank `finances.db` zu erstellen und diese mit einem realistischen Set von Transaktionsdaten 
+zu befüllen. Sie stellt somit eine wichtige Komponente für die Demonstration und das Testen der Anwendung dar
+und wird ausschließlich beim Start der Anwendung in der Entwicklungsphase verwendet. Da sie direkt auf die 
+SQLite-Datenbank zugreift, ist sie thematisch der Persistenz zuzuordnen.
+
+Der Konstruktor der Klasse bekommt als Parameter `years: int` übergeben, der festlegt, für wie viele vollen Jahre bis
+zum aktuellen Datum Testdaten erzeugt werden sollen. Er ruft die Methoden zur Erstellung der Datenbanktabellen 
+`_create_table` und `_create_table_budgets` auf, um die Datenbankstruktur vorzubereiten.
+
+Die Methode *run_creator()* führt die Hauptlogik zur Generierung der Transaktionen aus. Es wird monatsweise von der 
+definierten Startzeit bis zum Enddatum iteriert und dabei realistische Beispieldaten erzeugt:
+
+- Feste monatliche Einnahmen und Ausgaben (z. B. `Rent`, `Job`) zum Monatsbeginn
+- Zufällige Ausgaben für andere Kategorien (`Food`, `Sport`, `Other`, ...), wobei mindestens 20 zufällige Einträge pro 
+Monat generiert werden, um eine realistische Datenbasis zu schaffen
+
+Diese werden mit der Methode *add()* in der `transactions`-Tabelle gespeichert.
+
+Die Funktion *add_random_time(dt)* liegt außerhalb der Klasse, da sie keinen Zugriff auf Klasseninhalte benötigt.
+Sie wird zur Erstellung eines realistischen Zeitstempels für die Transaktionen verwendet, 
+um die Datum- und Uhrzeit-Informationen zufälliger zu gestalten.
+
+### Service Layer
+
+Die Serviceschicht bildet die Schnittstelle zwischen der API-Schicht und der darunter liegenden Domänen- und Persistenzschicht.
+
+Diese Schicht ist für die Koordination der Anwendungsfälle und die Ausführung der Geschäftsregeln verantwortlich. 
+Sie nimmt Daten entgegen, verwendet das Domänenmodell (`Transaction`, `Category`, `Budget`) und die Persistenzschicht 
+`SqliteDb`, um komplexe Aktionen durchzuführen.
+
+#### TransactionsService
+
+Die Klasse `TransactionsService` beinhaltet die gesamte Logik rund um das Hinzufügen, Abrufen und Filtern von 
+Transaktionen. Sie stellt sicher, dass alle Geschäftsregeln (z. B. Budgetprüfungen) eingehalten werden, 
+bevor Daten persistent gespeichert werden. Sie benötigt eine Instanz von `SqliteDb` zur Datenpersistenz und 
+eine Instanz des `BudgetsService` zur Durchsetzung der Budget-Geschäftslogik.
+
+`TransactionService` beinhaltet die folgenden Methoden:
+
+- *add_transaction(data: dict)* -->	Fügt eine Transaktion zur Datenbank hinzu. Enthält wichtige Validierungslogik: 
+Prüft vor dem Speichern, ob die Ausgabe das Budgetlimit für die betreffende Kategorie überschreiten würde. 
+Löst einen ValueError aus, falls das Budget nicht ausreicht.
+- *get_transactions(category_name: str, as_dict: bool)* ->	List[Transaction] oder List[dict] --> Ruft alle 
+Transaktionen ab. Ermöglicht optional die Filterung nach Kategorienamen. Kann die Rückgabe in eine Liste von Objekten 
+oder zur direkten API-Ausgabe in eine Liste von Dictionaries konvertieren.
+- *get_transactions_by_date*(exact_date: str, start_date: str, end_date: str, as_dict: bool) -> List[Transaction] 
+oder List[dict]	--> Bietet eine komplexe Abfrageschnittstelle zur Filterung von Transaktionen nach exaktem Datum, 
+Startdatum, Enddatum oder Datumsbereich. Delegiert die eigentliche Datenbankabfrage an die SqliteDb. Über `as_dict` 
+kann die Rückgabe als Liste von Objekten oder zur direkten API-Ausgabe als Liste von Dictionaries erfolgen.
+- *get_transactions_by_sub_category(sub_category: str, as_dict: bool)* -> List[Transaction] oder List[dict]	--> 
+Ruft alle Transaktionen ab, die einer bestimmten Unterkategorie zugeordnet sind. Über `as_dict` 
+kann die Rückgabe als Liste von Objekten oder zur direkten API-Ausgabe als Liste von Dictionaries erfolgen.
+- *get_all_categories() -> List[dict] --> Ruft alle verfügbaren Kategorien aus dem Domänenmodell `Category`-Enum ab 
+und formatiert sie für die API-Ausgabe.
+
+Interne Hilfsmethoden sind:
+
+- *_signed_amount(t)* --> Konvertiert den absolut gespeicherten Betrag der Transaktion in einen Betrag mit Vorzeichen 
+(negativ für Ausgaben, positiv für Einnahmen), basierend auf dem is_income-Attribut der `Category`.
+- *_convert_if_needed(transactions, as_dict)* --> Wird as_dict=True übergeben, wird die aus der Persistenzschicht
+abgerufene Liste von `Transaction`-Objekten in eine Liste von Dictionaries umgewandelt. Bei as_dict=False erfolgt die 
+Weitergabe als Liste von `Transaction`-Objekten.
+
+
 
 Die Flask-Routen wurden im UML-Diagramm als Controller-Klassen abstrahiert dargestellt, um die logische Struktur der API unabhängig vom verwendeten Framework zu modellieren.
 
