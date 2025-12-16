@@ -122,7 +122,9 @@ Die Struktur gliedert sich von unten nach oben in vier Hauptschichten:
 - Domain Layer (Domänenschicht): Der Kern der Anwendung, frei von Infrastruktur.
 - Persistence Layer (Persistenzschicht): Verantwortlich für die Speicherung der Domänenobjekte.
 - Service Layer (Serviceschicht): Koordiniert Anwendungsfälle und wendet Geschäftsregeln an.
-- API Layer (Präsentationsschicht): Definiert die Schnittstelle zum Frontend.
+- API Layer (Präsentationsschicht): Definiert die Schnittstelle zum Frontend. Die Flask-Routen wurden im UML-Diagramm 
+als Controller-Klassen abstrahiert dargestellt, um die logische Struktur der API unabhängig vom verwendeten Framework 
+zu zeigen.
 
 Die Abhängigkeitsrichtung ist von oben nach unten und folgt demnach dem Unabhängigkeitsprinzip. Höhere Schichten 
 können auf niedrigere Schichten zugreifen, aber niedrigere Schichten haben keine Abhängigkeiten zu höheren Schichten.
@@ -146,16 +148,16 @@ Daten verwendet. Ihre Hauptfunktion besteht darin, die Geschäftslogik der Kateg
 Jedes Mitglied des Enums repräsentiert eine Hauptkategorie und speichert in seinem Wert einen Tupel mit den 
 folgenden drei Elementen:
 
-- *category_name*, str --> Anzeigename der Kategorie (z.B. `Income`, `Food`, `Education`, ...)
-- *sub_category*, List[str] --> Liste der möglichen Unterkategorien (für `Food` z.B. [`Mensa`, `Bakery`, `Rewe`, ...])
-- *is_income*, bool --> speichert, ob Kategorie Einnahme (= `True`) oder Ausgabe (= `False`) ist, um die absolut 
+- `category_name, str`: Anzeigename der Kategorie (z.B. `Income`, `Food`, `Education`, ...)
+- `sub_category, List[str]`: Liste der möglichen Unterkategorien (für `Food` z.B. [`Mensa`, `Bakery`, `Rewe`, ...])
+- `is_income, bool`: speichert, ob Kategorie Einnahme (= `True`) oder Ausgabe (= `False`) ist, um die absolut 
 gespeicherten Beträge richtig verwenden zu können
 
 Um Zugriff auf die Tupel zu ermöglichen, enthält die Klasse drei @property_Methoden:
 
-- *category_name*, str --> Übergibt das Element an Tupel-Stelle 0 = Anzeigename
-- *sub_category*, List[str] --> Übergibt das Element an Tupel-Stelle 1 = Liste mit zugehörigen Unterkategorien
-- *is_income*, bool --> Übergibt das Element an Tupel-Stelle 2 = `True`/`False`
+- *category_name*, str: Übergibt das Element an Tupel-Stelle 0 = Anzeigename
+- *sub_category*, List[str]: Übergibt das Element an Tupel-Stelle 1 = Liste mit zugehörigen Unterkategorien
+- *is_income*, bool: Übergibt das Element an Tupel-Stelle 2 = `True`/`False`
 
 Die Methode *from_category_as_string*(cls, category_name: str) ermöglicht es anderen Teilen des Systems, 
 ein Category-Enum-Mitglied anhand des Anzeigenamens (z.B. dem in der Datenbank gespeicherten String) zu finden 
@@ -163,37 +165,36 @@ und das entsprechende Enum-Objekt zurückzugeben.
 
 #### Transaction
 
-Die Klasse `Transaction` repräsentiert eine einzelne finanzielle Transaktion. Sie dient ausschließlich als 
-Datencontainer und enthält keine Logik zur Datenpersistenz. Ihre Hauptaufgabe ist die Bündelung aller 
-relevanten Attribute, die eine Transaktion eindeutig beschreiben, bevor diese von anderen Modulen 
-(z.B. API-Endpunkten oder Datenbank-Handlern) weiterverarbeitet, persistiert oder in Berichten zusammengefasst werden.
+Die Klasse `Transaction` repräsentiert eine einzelne finanzielle Transaktion. Ihre Hauptaufgabe ist die Bündelung aller 
+relevanten Attribute, die eine Transaktion eindeutig beschreiben, bevor diese von anderen Schichten weiterverarbeitet, 
+persistiert oder in Berichten zusammengefasst werden.
 
 Sie enthält die folgenden Attribute:
 
-- *amount*, float --> Betrag der Transaktion, wird immer als Absolutbetrag gespeichert und auf zwei Dezimalstellen gerundet
-- *category_name*, str --> der Name der Hauptkategorie (z.B. `Income`, `Food`, `Education`, ...)
-- *sub_category*, str --> der Name der Unterkategorie (für `Food` z.B. `Mensa`, `Bakery`, `Rewe`...)
-- *date*, datetime --> der genaue Zeitpunkt der Transaktion im Format 'YYYY-MM-DDTHH:MM:SS'
+- `amount, float`: Betrag der Transaktion, wird immer als Absolutbetrag gespeichert und auf zwei Dezimalstellen gerundet
+- `category_name, str`: der Name der Hauptkategorie (z.B. `Income`, `Food`, `Education`, ...)
+- `sub_category, str`: der Name der Unterkategorie (für `Food` z.B. `Mensa`, `Bakery`, `Rewe`...)
+- `date, datetime`: der genaue Zeitpunkt der Transaktion im Format 'YYYY-MM-DDTHH:MM:SS'
 
 #### Budget
 
-Die Klasse `Budget` repräsentiert das Budgetlimit für eine bestimmte, vordefinierte Hauptkategorie (`Category`). 
+Die Klasse `Budget` repräsentiert das Budgetlimit für eine bestimmte `Category`. 
 Sie dient dazu einen Überblick über den aktuellen finanziellen Status einer Kategorie mit limitiertem Budget zu erhalten, 
 indem sie das maximale Ausgabenlimit speichert und die bereits getätigten Ausgaben verfolgt.
 
 Die Klasse enthält die folgenden Attribute:
 
-- *category*, Category --> das zugrunde liegende Category-Objekt, für das das Budget gilt
-- *limit*, float --> der Maximalbetrag, der für diese Kategorie ausgegeben werden darf (das Budgetlimit)
-- *spent*, float --> der Betrag, der bereits für diese Kategorie ausgegeben wurde (Standardwert ist 0.0)
+- `category, Category`: das zugrunde liegende Category-Objekt, für das das Budget gilt
+- `limit, float`: der Maximalbetrag, der für diese Kategorie ausgegeben werden darf (das Budgetlimit)
+- `spent, float` der Betrag, der bereits für diese Kategorie ausgegeben wurde (Standardwert ist 0.0)
 
 Die Klasse bietet folgende Methoden zur Verwaltung des Budgets:
 
-- *add_expense(amount: float)* --> Erhöht den Wert des Attributs `spent` um den übergebenen Betrag `amount`.
+- *add_expense(amount: float)*: Erhöht den Wert des Attributs `spent` um den übergebenen Betrag `amount`.
 Diese Methode wird verwendet, um neue Ausgaben zur Budgetverfolgung hinzuzufügen.
-- *get_remaining() -> float* --> Berechnet den noch verfügbaren Betrag im Budget.
+- *get_remaining()* -> `float`: Berechnet den noch verfügbaren Betrag im Budget.
 Die Berechnung erfolgt durch Subtraktion der bisherigen Ausgaben vom Limit: `self.limit` - `self.spent`.
-- *reset_spent()* --> Setzt den Wert des Attributs `spent` auf 0.0 zurück. Dies wird typischerweise zum Monatsanfang verwendet.
+- *reset_spent()*: Setzt den Wert des Attributs `spent` auf 0.0 zurück. Dies wird typischerweise zum Monatsanfang verwendet.
 
 ### Persistenz Layer
 
@@ -201,33 +202,33 @@ Die Persistenzschicht ist für den Zugriff auf die SQLite-Datenbank zuständig.
 
 #### SqliteDb
 
-Die Klasse SqliteDb kapselt sämtliche Datenbankoperationen unter Verwendung der sqlite3-Bibliothek.
+Die Klasse SqliteDb beinhaltet sämtliche Datenbankoperationen unter Verwendung der sqlite3-Bibliothek.
 Sie ist verantwortlich für das Speichern, Laden, Aktualisieren und Löschen von Transaktionen, 
 sowie für die Verwaltung von Budgets.
 
 Die öffentlichen Methoden sind die Schnittstelle für andere Schichten:
 
-- *save_transaction(transaction: Transaction)* --> speichert ein übergebenes `Transaction`-Objekt dauerhaft in der `transactions`-Tabelle
-- *load_all_transactions()* -> List[Transaction] --> ruft alle Transaktionen aus der Datenbank ab, sortiert nach Datum absteigend und 
+- *save_transaction(transaction: Transaction)*: speichert ein übergebenes `Transaction`-Objekt dauerhaft in der `transactions`-Tabelle
+- *load_all_transactions()* -> `List[Transaction]`: ruft alle Transaktionen aus der Datenbank ab, sortiert nach Datum absteigend und 
 gibt eine Liste der `Transaction`-Objekten zurück
-- *load_transactions_by_exact_date(date: str)* -> List[Transaction] --> ruft alle Transaktionen ab, die exakt am 
+- *load_transactions_by_exact_date(date: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, die exakt am 
 angegebenen Datum stattgefunden haben
-- *load_transactions_by_date_range(start_date: str, end_date: str)* -> List[Transaction] --> ruft alle Transaktionen ab, 
+- *load_transactions_by_date_range(start_date: str, end_date: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, 
 die innerhalb des angegebenen Datumsbereichs liegen (inklusive Grenzen)
-- *load_transactions_by_from_date (start_date: str, category_name: str)* -> List[Transaction] --> ruft alle Transaktionen 
+- *load_transactions_by_from_date (start_date: str, category_name: str)* -> `List[Transaction]`: ruft alle Transaktionen 
 vom Startdatum an ab. Optional wird nach `category_name` gefiltert.
-- *load_transactions_by_until_date(end_date: str)* -> List[Transaction] --> ruft alle Transaktionen bis zum Enddatum ab (inklusive Enddatum)
-- *load_transactions_by_category(category_name: str)* -> List[Transaction] --> ruft alle Transaktionen ab, die zu der 
+- *load_transactions_by_until_date(end_date: str)* -> `List[Transaction]`: ruft alle Transaktionen bis zum Enddatum ab (inklusive Enddatum)
+- *load_transactions_by_category(category_name: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, die zu der 
 angegebenen Hauptkategorie gehören
-- *load_transactions_by_sub_category(sub_category: str)* -> List[Transaction] --> ruft alle Transaktionen ab, die zu der 
+- *load_transactions_by_sub_category(sub_category: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, die zu der 
 angegebenen Unterkategorie gehören
-- *save_budget(category_name: str, limit: float)* --> speichert oder aktualisiert das Budgetlimit `limit` für die angegebene Kategorie
-- *get_budget_reset_month(category_name: str)*	-> str/None	--> ruft den gespeicherten Monatsstempel `last_reset_month` ab, 
+- *save_budget(category_name: str, limit: float)*: speichert oder aktualisiert das Budgetlimit `limit` für die angegebene Kategorie
+- *get_budget_reset_month(category_name: str)*	-> `str` oder `None`: ruft den gespeicherten Monatsstempel `last_reset_month` ab, 
 der angibt, wann das Budget zuletzt zurückgesetzt wurde
-- *update_budget_reset_month(category_name: str, month: str)* --> aktualisiert den Monatsstempel für das Budget der angegebenen Kategorie
-- *load_all_budgets()* -> Dict[str, float] --> ruft alle Budgets ab und gibt sie als Dictionary zurück, wobei der 
+- *update_budget_reset_month(category_name: str, month: str)*: aktualisiert den Monatsstempel für das Budget der angegebenen Kategorie
+- *load_all_budgets()* -> `Dict[str, float]`: ruft alle Budgets ab und gibt sie als Dictionary zurück, wobei der 
 Kategoriename der Schlüssel und das Limit der Wert ist
-- *delete_budget(category_name: str)* --> löscht das Budget der angegebenen Kategorie aus der Datenbank
+- *delete_budget(category_name: str)*: löscht das Budget der angegebenen Kategorie aus der Datenbank
 
 Interne Methoden zur Initialisierung der Datenbanktabellen *_create_table_transactions* und *_create_table_budgets* sind 
 als private Methoden implementiert und werden im Konstruktor aufgerufen. Sie dienen ausschließlich der 
@@ -236,10 +237,24 @@ Initialisierung der Datenbankstruktur.
 Die Persistenzschicht kennt die Model-Klassen (insbesondere `Transaction`), hat jedoch keine Abhängigkeiten zum
 API-Layer oder Frontend.
 
+##### Datenbankschema
+
+Die Anwendung verwendet eine einzige SQLite-Datenbankdatei. Das Schema besteht aus zwei Haupttabellen, deren Struktur 
+durch die privaten Initialisierungsmethoden *_create_table_transactions()* und *_create_table_budgets()* definiert wird.
+
+Die Tabelle `transactions` speichert alle Einnahmen und Ausgaben als einzelnen Transaktionen. Sie enthält die Attribute
+`id` (INTEGER, PRIMARY KEY), `category_name` (TEXT), `sub_category` (TEXT), `amount` (REAL), `date` (TEXT) und `description` (TEXT).
+Die Tabelle `budgets` speichert die monatlichen Budget-Limits pro Hauptkategorie und den Status des letzten Zurücksetzens.	
+Ihre Attribute sind `category_name` (TEXT, PRIMARY KEY), `limit` (REAL), `last_reset_month` (TEXT)
+
+Es werden die Standard-SQLite-Typen verwendet, wobei `date` und `last_reset_month` als Text im ISO 8601-Format 
+(YYYY-MM-DD bzw. YYYY-MM) gespeichert werden. `amount` und `limit` werden als REAL als Fließkommazahlen gespeichert, 
+um Währungsbeträge präzise zu speichern.
+
 ### Setup / Utility
 
 Die Setup/Utility-Sektion dient der Initialisierung der Anwendungsumgebung und ist für die Generierung von
-Beispieldaten notwendig. Diese Komponente sit vom eigentlichen Laufzeit-Geschäftsprozess entkoppelt und dient
+Beispieldaten notwendig. Diese Komponente ist vom eigentlichen Laufzeit-Geschäftsprozess entkoppelt und dient
 der Vereinfachung des Setups.
 
 #### DbCreator
@@ -284,50 +299,267 @@ eine Instanz des `BudgetsService` zur Durchsetzung der Budget-Geschäftslogik.
 
 `TransactionService` beinhaltet die folgenden Methoden:
 
-- *add_transaction(data: dict)* -->	Fügt eine Transaktion zur Datenbank hinzu. Enthält wichtige Validierungslogik: 
+- *add_transaction(data: dict)*: Fügt eine Transaktion zur Datenbank hinzu. Enthält wichtige Validierungslogik: 
 Prüft vor dem Speichern, ob die Ausgabe das Budgetlimit für die betreffende Kategorie überschreiten würde. 
 Löst einen ValueError aus, falls das Budget nicht ausreicht.
-- *get_transactions(category_name: str, as_dict: bool)* ->	List[Transaction] oder List[dict] --> Ruft alle 
+- *get_transactions(category_name: str, as_dict: bool)* -> `List[Transaction]` oder `List[dict]`: Ruft alle 
 Transaktionen ab. Ermöglicht optional die Filterung nach Kategorienamen. Kann die Rückgabe in eine Liste von Objekten 
 oder zur direkten API-Ausgabe in eine Liste von Dictionaries konvertieren.
-- *get_transactions_by_date*(exact_date: str, start_date: str, end_date: str, as_dict: bool) -> List[Transaction] 
-oder List[dict]	--> Bietet eine komplexe Abfrageschnittstelle zur Filterung von Transaktionen nach exaktem Datum, 
+- *get_transactions_by_date*(exact_date: str, start_date: str, end_date: str, as_dict: bool) -> `List[Transaction]` 
+oder `List[dict]`: Bietet eine komplexe Abfrageschnittstelle zur Filterung von Transaktionen nach exaktem Datum, 
 Startdatum, Enddatum oder Datumsbereich. Delegiert die eigentliche Datenbankabfrage an die SqliteDb. Über `as_dict` 
 kann die Rückgabe als Liste von Objekten oder zur direkten API-Ausgabe als Liste von Dictionaries erfolgen.
-- *get_transactions_by_sub_category(sub_category: str, as_dict: bool)* -> List[Transaction] oder List[dict]	--> 
+- *get_transactions_by_sub_category(sub_category: str, as_dict: bool)* -> `List[Transaction]` oder `List[dict]`: 
 Ruft alle Transaktionen ab, die einer bestimmten Unterkategorie zugeordnet sind. Über `as_dict` 
 kann die Rückgabe als Liste von Objekten oder zur direkten API-Ausgabe als Liste von Dictionaries erfolgen.
-- *get_all_categories() -> List[dict] --> Ruft alle verfügbaren Kategorien aus dem Domänenmodell `Category`-Enum ab 
+- *get_all_categories()* -> `List[dict]`: Ruft alle verfügbaren Kategorien aus dem Domänenmodell `Category`-Enum ab 
 und formatiert sie für die API-Ausgabe.
 
 Interne Hilfsmethoden sind:
 
-- *_signed_amount(t)* --> Konvertiert den absolut gespeicherten Betrag der Transaktion in einen Betrag mit Vorzeichen 
+- *_signed_amount(t)*: Konvertiert den absolut gespeicherten Betrag der Transaktion in einen Betrag mit Vorzeichen 
 (negativ für Ausgaben, positiv für Einnahmen), basierend auf dem is_income-Attribut der `Category`.
-- *_convert_if_needed(transactions, as_dict)* --> Wird as_dict=True übergeben, wird die aus der Persistenzschicht
+- *_convert_if_needed(transactions, as_dict)*:  Wird as_dict=True übergeben, wird die aus der Persistenzschicht
 abgerufene Liste von `Transaction`-Objekten in eine Liste von Dictionaries umgewandelt. Bei as_dict=False erfolgt die 
 Weitergabe als Liste von `Transaction`-Objekten.
 
+#### BudgetsService
+
+Die Klasse `BudgetsService` verwaltet die Budgets im System. Sie ist für das Setzen, Abrufen, Aktualisieren und 
+Löschen von Budgets zuständig und implementiert die monatliche Reset-Logik. Im Gegensatz zum `TransactionsService` 
+hält der `BudgetsService` den aktuellen Zustand aller Budgets im Speicher `self.budgets`, um schnelle Zugriffe zu ermöglichen.
+Sie nutzt `SqliteDb` zur Persistenz und arbeitet direkt mit den Domänenobjekten `Category` und `Budget`.
+
+Im Konstruktor wird der Service initialisiert. Es wird eine Instanz von `SqliteDb` erstellt und *_load_budgets_from_storage()* 
+aufgerufen, um alle persistenten Budgets in den internen Speicher in das `self.budgets`-Dictionary zu laden.
+Anschließend wird *ensure_budgets_are_current()* aufgerufen, um sicherzustellen, dass die Monatsbudgets aktuell sind.
+Die Methode prüft anhand des gespeicherten `last_reset_month`-Stempels, ob ein neuer Monat begonnen hat. Falls ja, 
+wird das Attribut `spent` des jeweiligen Budget-Objekts auf 0.0 zurückgesetzt und der Stempel in der Datenbank aktualisiert.
+
+Die Methoden von `BudgetsService` sind:
+- *set_budget(data: dict)*:	Setzt oder aktualisiert das Budgetlimit für eine Kategorie. Enthält Validierung: 
+Prüft, ob die aktuellen Ausgaben im laufenden Monat das neue Limit bereits überschreiten, bevor es gespeichert wird.
+- *get_all_budgets*	-> `List[dict]`: Ruft alle Budgets ab und berechnet für jedes Budget den aktuellen ausgegebenen 
+`spent` und verbleibenden `remaining` Betrag.
+- *get_current_spent_amount(category: str)* -> `float`: Ruft alle Transaktionen des aktuellen Monats für die gegebene 
+Ausgaben-Kategorie von `SqliteDb` ab und summiert die enthaltenen `amounts` auf.
+- *get_budget_for_category(category: Category)* -> `Budget` oder `None`: Gibt das gespeicherte Budget-Objekt für die 
+gegebene Kategorie aus dem internen Speicher zurück.
+- *delete_budget(category_string: str)*: Löscht das Budget sowohl aus dem internen Speicher `self.budgets` 
+als auch permanent aus der Datenbank.
+
+#### ReportsService
+
+Die Klasse `ReportsService` ist für die Datenauswertung und die Visualisierung von Berichten zuständig. Sie nutzt die 
+Rohdaten aus dem `TransactionsService` und verarbeitet sie mithilfe der Bibliotheken Pandas und Matplotlib, um 
+Finanzmetriken zu berechnen, die Daten zusammenzufassen und sie für die Darstellung in Diagrammen zu nutzen. Die fertigen
+Diagramme werden als Bilder (.png) zurückzugeben.
+
+`ReportsService`benötigt Instanzen des `BudgetsService` und des `TransactionsService`, um auf alle 
+Transaktions- und Budgetdaten zugreifen zu können.
+
+Die folgenden Methoden werde vom `ReportsService` zur Berichtserstellung genutzt:
+
+- *get_monthly_summary_chart_img* -> `BytesIO`:	Erstellt ein Liniendiagramm des Kontostands über die letzten 30 Tage. 
+Mit Pandas wird der Startkontostand berechnet, ein DataFrame erstellt, cumsum() zur Berechnung des kumulierten Saldos angewendet
+und fehlende Tage mit *ffill()* aufgefüllt, um einen lückenlosen Verlauf zu erhalten.
+- *get_bar_chart_img* -> `BytesIO`: Erstellt ein Balkendiagramm, das die im aktuellen Monat ausgegebenen Beträge pro 
+Kategorie den festgelegten Budgetlimits gegenüberstellt. Mit Matplotlib werden die ausgegebenen Beträge als Balken 
+und das Limit als horizontale gestrichelte Linien `hlines` visualisiert. Die Farben der Balken zeigen den Auslastungsgrad 
+des Budgets an.
+- *get_monthly_spending_share_chart_img(year: int, month: int)*	-> `BytesIO`: Erzeugt ein Doughnut-Diagramm , das den 
+prozentualen Anteil der Ausgaben jeder Kategorie für einen bestimmten Monat darstellt. 
+Die Gesamtausgaben werden in der Mitte des Diagramms angezeigt.
+- *get_monthly_income_share_chart_img(year: int, month: int)* -> `BytesIO`: Erzeugt ein Doughnut-Diagramm, das den 
+prozentualen Anteil der Einnahmen pro Unterkategorie für einen bestimmten Monat darstellt. Die Gesamteinnahmen werden in 
+der Mitte des Diagramms angezeigt.
+
+### API Layer
+
+Die Controller-Schicht ist die oberste Schicht des Backends und stellt sozusagen das Tor zur Außenwelt dar. Ihre Aufgabe 
+ist das Routing von HTTP-Anfragen, die Validierung von Eingabedaten und die Formatierung der Responses.
+
+Diese Schicht enthält keine Geschäftslogik. Sie delegiert alle komplexen Aufgaben an die Service Layer.
+
+Alle Controller sind als Flask Blueprints implementiert. Die Blueprints sammeln hier alle Transaktions-Endpunkte und 
+ermöglichen die einfache Registrierung der Routen in der Haupt-Flask-Anwendung `app.py`.
+
+#### Transactions API Controller
+
+Der Transactions API Controller stellt eine REST-Schnittstelle zur Verwaltung aller Finanztransaktionen und zur 
+Abfrage von Kategoriedaten bereit. Jegliche Geschäftslogik wird vollständig an den `TransactionsService` delegiert.
+
+Definierte REST-Endpunkte:
+
+- /categories `GET`: Ruft alle definierten Kategorien ab. Delegiert an *transactions_service.get_all_categories()*. 
+Gibt eine Liste der Kategorien als JSON (Status: `200`).
+- /transactions `GET` mit ?category=<name>:	Ruft alle Transaktionen ab. Optional kann über den category-Parameter nach 
+einer bestimmten Hauptkategorie gefiltert werden. Delegiert an *transactions_service.get_transactions()*.
+- /transactions/by-date `GET` mit ?exact_date=<date>, ?start_date=<date>, ?end_date=<date>: Ruft Transaktionen basierend 
+auf verschiedenen Datumsfiltern ab. Delegiert die Filterlogik an *transactions_service.get_transactions_by_date()*.
+- /transactions/by-sub-category `GET` mit ?sub_category=<name>:	Ruft Transaktionen ab, die einer bestimmten 
+Unterkategorie zugeordnet sind. Erfordert den sub_category-Parameter.
+- /transactions `POST`: Nimmt die Transaktionsdaten (Betrag, Kategorie, etc.) im JSON-Body entgegen und übergibt sie zur 
+Validierung und Speicherung an *transactions_service.add_transaction()*. Gibt bei Erfolg den Status `201` Created zurück.
 
 
-Die Flask-Routen wurden im UML-Diagramm als Controller-Klassen abstrahiert dargestellt, um die logische Struktur der API unabhängig vom verwendeten Framework zu modellieren.
+Die API-Routen enthalten eine grundlegende Fehlerbehandlung, die spezifische Geschäftsfehler (ValueError vom Service) 
+mit dem Statuscode `400` Bad Request und allgemeine Serverfehler mit `500` Internal Server Error beantwortet.
 
-# React + Vite
+#### Budgets API Controller
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Der Budgets API Controller stellt die REST-Schnittstelle zur Verwaltung der Budgets pro Kategorie bereit. 
+Er dient als Controller, der alle Anfragen an den `BudgetsService` weiterleitet und die Antworten für das Frontend formatiert.
 
-Currently, two official plugins are available:
+Definierte REST-Endpunkte:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `POST`: Setzen/Aktualisieren eines Budgets. Nimmt die Daten `category_name` und `limit` aus dem JSON body entgegen und leitet 
+sie an *budgets_service.set_budget()* weiter. Löst `409` Conflict aus, wenn das Budgetlimit bereits überschritten wurde (ValueError).
+- `GET`: Ruft die aktuelle Liste aller Budgets, inklusive berechnetem `spent` und `remaining`, vom `BudgetsService` ab.
+- /<category_name>	`DELETE`: Löscht das Budget für die angegebene Kategorie. Verwendet den Kategorienamen als 
+URL-Parameter. Delegiert an *budgets_service.delete_budget()*.
 
 
-~/PycharmProjects/PfDS_M1_FinancialManager$ python -m backend.app
+Zur Fehlerbehandlung wird bei fehlenden Feldern im JSON-Body (KeyError) ein `400`Bad Request zurückgegeben. Ein `409` 
+Conflict wird zurückgegeben, wenn eine Budget-Setzung fehlschlägt, weil der bereits ausgegebene Betrag das neue Limit 
+überschreitet (basierend auf der ValueError des Service). Zur allgemeinen Fehlerbehandlung wird `500` Internal Server Error verwendet.
+
+#### Reports API Controller
+
+Der Reports API Controller ist für das Abrufen und Bereitstellen von Berichten und Diagrammen zuständig, 
+die durch den `ReportsService` generiert werden.
+
+Da der ReportsService Bilder (.png) zurückgibt, ist die Hauptaufgabe dieses Controllers, das empfangene 
+Binärdaten-Objekt `BytesIO` mithilfe der Flask-Funktion *send_file* korrekt zu verpacken und als `image/png` MIME-Type 
+an den Client zu senden.
+
+Definierte REST-Endpunkte für Berichte:
+
+- /monthly-income-share-chart `GET`	mit ?year=<int>, ?month=<int>: Liefert ein Doughnut-Diagramm der Einnahmenanteile 
+pro Unterkategorie für den angegebenen Monat/Jahr von *reports_service.get_monthly_income_share_chart_img()*.
+- /monthly-spending-share-chart `GET` mit ?year=<int>, ?month=<int>: Liefert ein Doughnut-Diagramm der 
+Ausgabenanteile pro Kategorie für den angegebenen Monat/Jahr. Delegiert an *reports_service.get_monthly_spending_share_chart_img()*.
+- /monthly-summary `GET`: Liefert ein Liniendiagramm des Kontostandsverlaufs der letzten 30 Tage von
+*reports_service.get_monthly_summary_chart_img()*.
+- /bar-chart `GET`: Liefert ein Balkendiagramm, das den aktuellen Budget-Verbrauch im Verhältnis zum Budget-Limit 
+darstellt von *reports_service.get_bar_chart_img()*.
+
+Alle Endpunkte geben den HTTP-Status 200 OK zurück. Anstelle von JSON-Daten senden die Endpunkte eine Binärdatei 
+`image/png`, die direkt in der Frontend-Anwendung als Bild angezeigt werden kann. `500` Internal Server Error wird 
+als allgemeiner Fallback-Fehlercode zurückgegeben, falls bei der Diagrammerstellung, Datenabfrage oder beim 
+Verpacken der Datei ein unerwarteter interner Fehler auftritt.
+
+### Frontend-Systembeschreibung
+
+Das Frontend wurde unter Verwendung des React-Frameworks in Verbindung mit dem Build-Tool Vite als 
+Single-Page Application (SPA) entwickelt.
+
+Die React-Anwendung agiert als Client und kommuniziert ausschließlich über asynchrone REST API Calls mit der Backend-API Layer.
+
+#### Routing und Seitenstruktur
+
+Das Routing erfolgt client-seitig über die Bibliothek `react-router-dom`. Dies ermöglicht die Navigation innerhalb der 
+Anwendung, ohne dass die Seite neu geladen werden muss. Die Hauptstruktur der Anwendung wird in der Komponente App.jsx definiert.
+Der `<Router>` vom Typ BrowserRouter umschließt die gesamte Anwendung und aktiviert das client-seitige Routing. 
+Innerhalb der `<Routes>`-Komponente werden die spezifischen URLs der Anwendung den entsprechenden Hauptkomponenten zugeordnet.
+Jede Route lädt eine Page-Komponente (Home, Transactions, Budget oder Reports). Alle Page-Komponenten sind in die 
+`<Layout>`-Komponente eingebettet. Diese Komponente fungiert als Rahmen, der Navigation, Header und andere 
+wiederkehrende Elemente enthält, wodurch ein konsistentes Design über alle Seiten hinweg gewährleistet wird.
+
+#### Globale Zustandsverwaltung und API-Kopplung
+
+Zum State Management der Anwendung wird das React Context API verwendet.
+
+Die Komponente `<TransactionsProvider>` umschließt alle `<Routes>`. Durch diese Anordnung wird sichergestellt, dass der 
+gesamte Anwendungsbaum Zugriff auf den Zustand und die bereitgestellten Funktionen dieses Contexts hat.
+Der TransactionsProvider wird in der Datei TransactionsContext.jsx implementiert. Die Datei enthält den Custom Hook 
+*useTransactions()*. Dieser Hook stellt sicher, dass alle Komponenten effizient auf die Transaktionsdaten `transactions` 
+und die Aktualisierungsfunktion `reload: loadTransactions` zugreifen können, ohne direkt mit dem Backend interagieren zu müssen.
+Der Provider nutzt den React Hook `useEffect`, um die Funktion *loadTransactions()* beim erstmaligen Laden einer Page aufzurufen. 
+Diese Funktion führt den asynchronen fetch-Aufruf an den Backend-Endpunkt GET /api/transactions aus 
+und aktualisiert nach Empfang der JSON-Daten den lokalen Zustand.
+
+#### Page-Komponenten
+
+Die Komponenten im pages/-Verzeichnis stellen die Seiten der SPA dar. Sie nutzen entweder den globalen Zustand über 
+den useTransactions-Hook oder führen direkte API-Aufrufe für spezifische, nicht-globale Daten wie Budgets oder Diagramme aus.
+
+##### - Home (Home.jsx)
+
+Home ist die Übersichtsseite, die den aktuellen Finanzstatus auf einen Blick zusammenfasst.
+Kontostand und Transaktionen nutzen den Hook *useTransactions()* und berechnet den Gesamt-Kontostand `balance` aus allen 
+Transaktionen. Außerdem werden die 10 neuesten Transaktionen angezeigt.
+Für das Diagramm wird ein direkter Aufruf zum Backend-Endpunkt GET /api/chart/monthly-summary durchgeführt. 
+Das Diagramm wird jedes Mal neu geladen, wenn sich die Transaktionen mit *useEffect([transactions])* ändern, um den Verlauf 
+des Kontostands aktuell zu halten.
+
+##### - Transactions (Transactions.jsx)
+
+Transactions ist die zentrale Seite zur Anzeige, Verwaltung und Filterung von Transaktionen. Um die aktuellen 
+Transaktionen zu bekommen, wird der Hook *useTransactions()* genutzt. Es wird ein fetch Request zu GET /api/categories 
+ausgeführt, um die Liste der verfügbaren Kategorien für die Filterauswahl abzurufen.
+Der Handler `handleCategoryChange` ruft die Context-Funktion *reload(category)* auf. Dies bewirkt, dass der Context 
+einen gefilterten API-Aufruf (z.B. GET /api/transactions?category=Food) sendet und den globalen Zustand des Formulars aktualisiert.
+
+Die Komponente AddTransactionForm ruft nach erfolgreicher Erstellung die *reload()*-Funktion des Contexts auf, 
+um die Liste zu aktualisieren.
+
+##### - Budgets (Budgets.jsx)
+
+Die Seite Budgets dient zur Anzeige, Festlegung und Löschung monatlicher Budget-Limits.
+Die Komponente ist nicht mit dem TransactionsContext verbunden, sondern verwaltet den Budget-Zustand `budgets` lokal.
+Dafür führt die Funktion *loadBudgets()* einen direkten fetch Request zu GET /api/budgets aus.
+
+Die Komponenten AddBudgetForm und DeleteBudgetForm rufen nach erfolgreicher Aktion die Funktion *loadBudgets()* auf, 
+um die Budgetliste neu vom Backend abzurufen und die Seite zu aktualisieren. Dies stellt sicher, dass die Liste immer 
+den aktuellen Zustand der Persistenzschicht widerspiegelt.
+
+##### - Reports (Reports.jsx)
+
+Reports ist die Seite zur Visualisierung von Finanzberichten. Diese Seite generiert dynamisch URLs, um Bilder vom 
+Reports API Controller abzurufen. Beim Laden der Seite wird statisch das Balkendiagramm zum Budget-Verbrauch
+mit GET /api/chart/bar-chart aufgerufen. Die dynamischen Berichte zu den monatlichen Einnahmen und Ausgaben werden mit
+GET /api/chart/monthly-spending-share-chart und GET /api/chart/monthly-income-share-chart abgerufen. Dafür wird über 
+die Auswahlfelder für Monat und Jahr die Funktion *reloadShareCharts()* ausgelöst. Diese Funktion erstellt die URLs neu 
+und fügt einen Timestamp `&t=${Date.now()}` hinzu. Dieser Mechanismus sorgt dafür, dass der Browser gezwungen wird, 
+die Bilder jedes Mal neu vom Backend anzufordern, wenn die Auswahl verändert wird.
+
+#### Detail-Komponenten (components/)
+
+Diese Komponenten sind wiederverwendbare Bausteine, die entweder für die Dateneingabe, die Datenansicht oder das Feedback 
+zuständig sind.
+
+##### - AddBudgetForm.jsx
+
+AddBudgetsFrom ist ein Formular zum Erstellen oder Aktualisieren eines monatlichen Budgets.
+
+Um die Kategorien zu filtern, wird beim Laden ein GET Request an /api/categories durchgeführt. Die Liste im Frontend ist
+gefiltert, um nur die Ausgabenkategorien ohne `Sales` und `Income` für das Setzen eines Limits anzubieten.
+Zum Festlegen eines Budgetlimits wird ein POST Request an den Endpunkt /api/budgets gesendet.
+
+Es ist eine spezifische Behandlung für den Statuscode 409 Conflict implementiert. Dieser wird vom Backend ausgelöst, 
+wenn der bereits ausgegebene Betrag das neue Limit überschritten wird, um dem/der Benutzer*in eine klare Fehlermeldung 
+per Toast-Message anzuzeigen.
+Um die Budgetliste in der Elternkomponente `Budgets.jsx` neu zu laden, wird *onSuccess()* aufgerufen.
+
+##### - DeleteBudgetForm.jsx
+
+DeleteBudgetForm ist ein Formular zum Löschen eines bestehenden Budgets.
+
+Die Liste der löschbaren Budgets `props.budgets` wird von der Elternkomponente `Budgets.jsx` bereitgestellt.
+Zum Löschen wird ein DELETE Request an den spezifischen Endpunkt /api/budgets/<category_name> weitergeleitet.
+Um die Budgetliste in der Elternkomponente nach erfolgreicher Löschung zu aktualisieren, wird *onSuccess()* aufgerufen.
+
+##### - BudgetList.jsx
+
+BudgetList ist eine reine Darstellungskomponente für die Budget-Daten.
+
+Sie erhält die Budgetdaten `props.budgets` als Array von der Elternkomponente `Budgets.jsx`. Die Daten werden formatiert 
+(z.B. toFixed(2) für Beträge) und in einem responsiven Raster-Layout dargestellt. Außerdem werden Kategorie-Icons zur 
+besseren Visualisierung genutzt.
+
+##### - Toast.jsx
+
+Die Toast-Komponente dient als Benachrichtigungssystem für Erfolgs- oder Fehlermeldungen für Useraktionen.
+Sie akzeptiert als Typ `success` und `error`, um die Farbe des Toasts zu steuern (Erfolg=grün, Fehler=rot).
+Der `useEffect`-Hook wird genutzt, um die Benachrichtigung nach 3 Sekunden automatisch auszublenden, indem *onClose* aufgerufen wird.

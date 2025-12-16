@@ -41,7 +41,6 @@ export default function Transactions() {
         reload(category);
     }
 
-
     return (
         <div className="ml-10 mr-25 pb-15 flex flex-col items-center">
             <div className="pt-5 pb-3"></div>

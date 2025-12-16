@@ -35,7 +35,7 @@ class TransactionsService:
         :param data: transaction data
         """
         amount = float(data['amount'])
-        category_name = data['category_name']
+        category_name = data['category']
         sub_category = data['sub_category']
 
         category = Category.from_category_as_string(category_name)
