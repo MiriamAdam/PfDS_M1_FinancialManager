@@ -45,7 +45,7 @@ Um die Anwendung zu starten, müssen Backend und Frontend in zwei separaten Term
 
 3. Benötigte Programme installieren:
 
-    > npm install -r requirements.txt
+    > pip install -r requirements.txt
 
 4. Wieder in den Hauptordner des Projekts wechseln und das Backend starten:
 
