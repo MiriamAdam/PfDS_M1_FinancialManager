@@ -43,14 +43,14 @@ Um die Anwendung zu starten, müssen Backend und Frontend in zwei separaten Term
    > 
    > source venv/bin/activate
 
-3. Benötigte Programme installieren:
-
-    > pip install -r requirements.txt
-
-4. Wieder in den Hauptordner des Projekts wechseln und das Backend starten:
+3. Wieder in den Hauptordner des Projekts wechseln und benötigte Programme installieren:
 
     > cd ..
    > 
+    > pip install -r requirements.txt
+
+4. und das Backend starten:
+    
    > python -m backend.app
 
 5. In der Konsole erscheint jetzt das Startmenü. Es muss ausgewählt werden, 

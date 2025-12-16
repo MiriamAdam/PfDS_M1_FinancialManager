@@ -9,7 +9,7 @@ export default function Layout({children}) {
                 <div className=" ml-10">Aufgabe 1 – Applikation: Finanzmanager</div>
 
             </div>
-            <nav className="flex flex-col border-r-2 border-gray-200 p-5 ">
+            <nav className="flex flex-col border-r-2 border-gray-200 p-5 text-xl ">
                 <a href={'/'} className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100">Overview</a>
                 <a href={'/transactions'} className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100">Transactions</a>
                 <a href={'/budgets'} className="flex items-center px-4 py-2 text-gray-700 rounded-md hover:bg-gray-100">Budgets</a>
