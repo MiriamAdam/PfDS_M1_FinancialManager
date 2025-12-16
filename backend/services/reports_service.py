@@ -33,10 +33,11 @@ class ReportsService:
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30)
 
-        previous_transactions = self.transactions.get_transactions_by_date(end_date=start_date)
+        #end_date=start_date because we need all transactions before the 30 days range to get the initial balance
+        previous_transactions = self.transactions.get_transactions(end_date=start_date)
         initial_balance = sum(self._signed_amount(t) for t in previous_transactions)
 
-        transactions_last_30_days = self.transactions.get_transactions_by_date(start_date=start_date,
+        transactions_last_30_days = self.transactions.get_transactions(start_date=start_date,
                                                                                   end_date=end_date)
 
         df = pd.DataFrame([{
@@ -83,7 +84,7 @@ class ReportsService:
         end_date = datetime.now()
         start_date = end_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        transactions_current_month = self.transactions.get_transactions_by_date(start_date=start_date,
+        transactions_current_month = self.transactions.get_transactions(start_date=start_date,
                                                                                   end_date=end_date)
         data_for_df = []
 
@@ -185,7 +186,7 @@ class ReportsService:
         start_date = datetime(year, month, 1)
         end_date = start_date + relativedelta(months=1) - relativedelta(seconds=1)
 
-        all_transactions = self.transactions.get_transactions_by_date(start_date=start_date, end_date=end_date)
+        all_transactions = self.transactions.get_transactions(start_date=start_date, end_date=end_date)
 
         spending_data = {}
 
@@ -241,7 +242,7 @@ class ReportsService:
         start_date = datetime(year, month, 1)
         end_date = start_date + relativedelta(months=1) - relativedelta(seconds=1)
 
-        all_transactions = self.transactions.get_transactions_by_date(start_date=start_date, end_date=end_date)
+        all_transactions = self.transactions.get_transactions(start_date=start_date, end_date=end_date)
 
         income_data = {}
 

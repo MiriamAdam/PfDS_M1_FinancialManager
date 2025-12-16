@@ -21,45 +21,16 @@ def get_categories():
 @transactions_api.route('/transactions', methods=['GET'])
 def get_transactions():
     """
-    Get all transactions, optionally filtered by category
+    Get all transactions, optionally filtered by category or sub-category
     Query parameter: ?category=<category_name>
+    Query parameter: ?sub_category=<sub_category_name>
     """
     category = request.args.get('category')
+    sub_category = request.args.get('sub_category')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
     try:
-        transactions = transactions_service.get_transactions(category, as_dict=True)
-        return jsonify(transactions), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@transactions_api.route('/transactions/by-date', methods=['GET'])
-def get_transactions_by_date():
-    """Get transactions filtered by date"""
-    try:
-        exact_date = request.args.get('exact_date')
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-
-        transactions = transactions_service.get_transactions_by_date(
-            exact_date=exact_date,
-            start_date=start_date,
-            end_date=end_date,
-            as_dict=True
-        )
-
-        return jsonify(transactions), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@transactions_api.route('/transactions/by-sub-category', methods=['GET'])
-def get_transactions_by_sub_cat():
-    """Get transactions by sub category"""
-    try:
-        sub_category = request.args.get('sub_category')
-        if not sub_category:
-            return jsonify({'error': 'sub_category parameter required'}), 400
-
-        transactions = transactions_service.get_transactions_by_sub_category(sub_category, as_dict=True)
+        transactions = transactions_service.get_transactions(category, sub_category, start_date=start_date, end_date=end_date, as_dict=True)
         return jsonify(transactions), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -1,7 +1,20 @@
-# Systembeschreibung Finanzmanager
+# Aufgabe 1 - Applikation: Finanzmanager
 
-Die Finanzmanager-Anwendung ermöglicht es Einzelpersonen, ihre Ausgaben und Einnahmen zu dokumentieren.
-Mit Hilfe von monatlichen Budgets ist es möglich einzelne Ausgaben-Kategorien zu beschränken. Transaktionen, die das 
+Die Finanzmanager-Anwendung wurde von Miriam Adam im Rahmen des Wahlpflichtmoduls "Einführung in Python for Data Science" 
+im Wintersemester 2025/2026 an der Hochschule Bremen erstellt. Sie ist Teil von drei Aufgaben, die als erster Meilenstein 
+des Moduls innerhalb von sechs Wochen in Dreiergruppen bearbeitet werden sollte. Unserer Gruppe hat sich nach längerem 
+Überlegen dazu entschieden, dass jede Person alleine eine Aufgabe bearbeitet. 
+
+Ziel dieser Aufgabe war es, einen persönlichen Finanzmanager zu entwickeln, der Nutzer*innen dabei hilft, seine/ihre 
+Finanzen im Überblick zu behalten. Dabei soll er die Möglichkeit bieten, Einnahmen und Ausgaben zu erfassen, zu 
+kategorisieren und auszuwerten. Während das Backend mit Python geschrieben werden sollte, war die Wahl des User-Interfaces 
+den Studierenden überlassen.
+
+# Systembeschreibung
+
+Die hier erstellte Anwendung ermöglicht es Einzelpersonen, ihre Ausgaben und Einnahmen zu dokumentieren, indem Transaktionen
+gespeichert und nach Kategorien und Datum gefiltert werden können.
+Mithilfe von monatlichen Budgets ist es möglich einzelne Ausgaben-Kategorien zu beschränken. Transaktionen, die das 
 gewählte Limit überschreiten würden, werden nicht zugelassen. Grafiken veranschaulichen die aktuelle finanzielle Situation
 und es gibt die Möglichkeit, sich Einnahmen und Ausgaben bezogen auf den prozentualen Anteil der Kategorien 
 am Gesamtanteil für einen ausgewählten Monat anzeigen zu lassen.
@@ -62,7 +75,7 @@ Datenbank gestartet werden soll. Bei Auswahl (2.) muss die Anzahl der Jahre, fü
    > 
    > npm run preview
 
-**Jetzt kann die Anwendung im Browser über http://localhost:4173/ aufgerufen werden.**
+Jetzt kann die Anwendung im Browser über http://localhost:4173/ aufgerufen werden.
 
 ### Anwendungsbeschreibung
 
@@ -76,9 +89,9 @@ letzten 30 Tage darstellt. Darunter werden die letzten zehn Transaktionen angeze
 
 Auf der Seite **Transactions** befindet sich im oberen Bereich ein Formular, mit dem Transaktionen angelegt werden können.
 Nach Auswahl der Kategorie kann die passende Unterkategorie ausgewählt und der entsprechende Betrag eingegeben werden.
-Mit einem Klick auf *Add transaction* wird die Transaktion entgegengenommen und erscheint als neuste Buchung im darunter
-liegenden Fenster. Hier sind alle bisher getätigten Transaktionen von der aktuellsten zur ältesten Buchung aufgelistet. 
-Mit dem Formular darüber kann nach Kategorien gefiltert werden.
+Mit einem Klick auf *Add transaction* wird die Transaktion entgegengenommen und erscheint als neuste Buchung im unteren Bereich. 
+Hier sind alle bisher getätigten Transaktionen von der aktuellsten zur ältesten Buchung aufgelistet. 
+Mit den Formularen darüber kann nach Kategorien und/oder Datum gefiltert werden.
 
 ![transaction menu](/assets/transactions_sm.png)
 
@@ -209,19 +222,12 @@ sowie für die Verwaltung von Budgets.
 Die öffentlichen Methoden sind die Schnittstelle für andere Schichten:
 
 - *save_transaction(transaction: Transaction)*: speichert ein übergebenes `Transaction`-Objekt dauerhaft in der `transactions`-Tabelle
-- *load_all_transactions()* -> `List[Transaction]`: ruft alle Transaktionen aus der Datenbank ab, sortiert nach Datum absteigend und 
-gibt eine Liste der `Transaction`-Objekten zurück
-- *load_transactions_by_exact_date(date: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, die exakt am 
-angegebenen Datum stattgefunden haben
-- *load_transactions_by_date_range(start_date: str, end_date: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, 
-die innerhalb des angegebenen Datumsbereichs liegen (inklusive Grenzen)
-- *load_transactions_by_from_date (start_date: str, category_name: str)* -> `List[Transaction]`: ruft alle Transaktionen 
-vom Startdatum an ab. Optional wird nach `category_name` gefiltert.
-- *load_transactions_by_until_date(end_date: str)* -> `List[Transaction]`: ruft alle Transaktionen bis zum Enddatum ab (inklusive Enddatum)
-- *load_transactions_by_category(category_name: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, die zu der 
-angegebenen Hauptkategorie gehören
-- *load_transactions_by_sub_category(sub_category: str)* -> `List[Transaction]`: ruft alle Transaktionen ab, die zu der 
-angegebenen Unterkategorie gehören
+- *load_all_transactions(start_date: str = None, end_date: str = None)* -> `List[Transaction]`: ruft alle Transaktionen 
+aus der Datenbank ab, optional gefiltert nach Datum, und gibt eine Liste der `Transaction`-Objekte zurück
+- *load_transactions_by_category(category_name: str, start_date: str = None, end_date: str = None)* -> `List[Transaction]`: 
+ruft alle Transaktionen ab, die zu der angegebenen Hauptkategorie gehören, optional gefiltert nach Datum
+- *load_transactions_by_sub_category(sub_category: str, start_date: str = None, end_date: str = None)* -> `List[Transaction]`: 
+ruft alle Transaktionen ab, die zu der angegebenen Unterkategorie gehören, optional gefiltert nach Datum
 - *save_budget(category_name: str, limit: float)*: speichert oder aktualisiert das Budgetlimit `limit` für die angegebene Kategorie
 - *get_budget_reset_month(category_name: str)*	-> `str` oder `None`: ruft den gespeicherten Monatsstempel `last_reset_month` ab, 
 der angibt, wann das Budget zuletzt zurückgesetzt wurde
@@ -234,8 +240,7 @@ Interne Methoden zur Initialisierung der Datenbanktabellen *_create_table_transa
 als private Methoden implementiert und werden im Konstruktor aufgerufen. Sie dienen ausschließlich der 
 Initialisierung der Datenbankstruktur.
 
-Die Persistenzschicht kennt die Model-Klassen (insbesondere `Transaction`), hat jedoch keine Abhängigkeiten zum
-API-Layer oder Frontend.
+Die Persistenzschicht kennt die Model-Klassen, hat jedoch keine Abhängigkeiten zum API-Layer oder Frontend.
 
 ##### Datenbankschema
 
@@ -295,23 +300,16 @@ Sie nimmt Daten entgegen, verwendet das Domänenmodell (`Transaction`, `Category
 Die Klasse `TransactionsService` beinhaltet die gesamte Logik rund um das Hinzufügen, Abrufen und Filtern von 
 Transaktionen. Sie stellt sicher, dass alle Geschäftsregeln (z. B. Budgetprüfungen) eingehalten werden, 
 bevor Daten persistent gespeichert werden. Sie benötigt eine Instanz von `SqliteDb` zur Datenpersistenz und 
-eine Instanz des `BudgetsService` zur Durchsetzung der Budget-Geschäftslogik.
+eine Instanz des `BudgetsService` zur Einhaltung der Budget-Geschäftslogik.
 
 `TransactionService` beinhaltet die folgenden Methoden:
 
 - *add_transaction(data: dict)*: Fügt eine Transaktion zur Datenbank hinzu. Enthält wichtige Validierungslogik: 
 Prüft vor dem Speichern, ob die Ausgabe das Budgetlimit für die betreffende Kategorie überschreiten würde. 
 Löst einen ValueError aus, falls das Budget nicht ausreicht.
-- *get_transactions(category_name: str, as_dict: bool)* -> `List[Transaction]` oder `List[dict]`: Ruft alle 
-Transaktionen ab. Ermöglicht optional die Filterung nach Kategorienamen. Kann die Rückgabe in eine Liste von Objekten 
-oder zur direkten API-Ausgabe in eine Liste von Dictionaries konvertieren.
-- *get_transactions_by_date*(exact_date: str, start_date: str, end_date: str, as_dict: bool) -> `List[Transaction]` 
-oder `List[dict]`: Bietet eine komplexe Abfrageschnittstelle zur Filterung von Transaktionen nach exaktem Datum, 
-Startdatum, Enddatum oder Datumsbereich. Delegiert die eigentliche Datenbankabfrage an die SqliteDb. Über `as_dict` 
-kann die Rückgabe als Liste von Objekten oder zur direkten API-Ausgabe als Liste von Dictionaries erfolgen.
-- *get_transactions_by_sub_category(sub_category: str, as_dict: bool)* -> `List[Transaction]` oder `List[dict]`: 
-Ruft alle Transaktionen ab, die einer bestimmten Unterkategorie zugeordnet sind. Über `as_dict` 
-kann die Rückgabe als Liste von Objekten oder zur direkten API-Ausgabe als Liste von Dictionaries erfolgen.
+- *get_transactions(category_name: str, sub_category: str, start_date: str = None, end_date: str = None as_dict: bool=False)* 
+-> `List[Transaction]` oder `List[dict]`: Ruft alle Transaktionen ab. Ermöglicht optional die Filterung nach Kategorien und Datum. 
+Kann die Rückgabe in eine Liste von Objekten oder zur direkten API-Ausgabe in eine Liste von Dictionaries konvertieren.
 - *get_all_categories()* -> `List[dict]`: Ruft alle verfügbaren Kategorien aus dem Domänenmodell `Category`-Enum ab 
 und formatiert sie für die API-Ausgabe.
 
@@ -381,24 +379,21 @@ ist das Routing von HTTP-Anfragen, die Validierung von Eingabedaten und die Form
 
 Diese Schicht enthält keine Geschäftslogik. Sie delegiert alle komplexen Aufgaben an die Service Layer.
 
-Alle Controller sind als Flask Blueprints implementiert. Die Blueprints sammeln hier alle Transaktions-Endpunkte und 
+Alle Controller sind als Flask Blueprints implementiert. Die Blueprints sammeln alle Transaktions-Endpunkte und 
 ermöglichen die einfache Registrierung der Routen in der Haupt-Flask-Anwendung `app.py`.
 
 #### Transactions API Controller
 
 Der Transactions API Controller stellt eine REST-Schnittstelle zur Verwaltung aller Finanztransaktionen und zur 
-Abfrage von Kategoriedaten bereit. Jegliche Geschäftslogik wird vollständig an den `TransactionsService` delegiert.
+Abfrage von Kategoriedaten bereit. Jegliche Geschäftslogik wird vollständig an den `TransactionsService` weitergegeben.
 
 Definierte REST-Endpunkte:
 
-- /categories `GET`: Ruft alle definierten Kategorien ab. Delegiert an *transactions_service.get_all_categories()*. 
-Gibt eine Liste der Kategorien als JSON (Status: `200`).
-- /transactions `GET` mit ?category=<name>:	Ruft alle Transaktionen ab. Optional kann über den category-Parameter nach 
-einer bestimmten Hauptkategorie gefiltert werden. Delegiert an *transactions_service.get_transactions()*.
-- /transactions/by-date `GET` mit ?exact_date=<date>, ?start_date=<date>, ?end_date=<date>: Ruft Transaktionen basierend 
-auf verschiedenen Datumsfiltern ab. Delegiert die Filterlogik an *transactions_service.get_transactions_by_date()*.
-- /transactions/by-sub-category `GET` mit ?sub_category=<name>:	Ruft Transaktionen ab, die einer bestimmten 
-Unterkategorie zugeordnet sind. Erfordert den sub_category-Parameter.
+- /categories `GET`: Ruft alle definierten Kategorien über *transactions_service.get_all_categories()* ab. 
+Gibt eine Liste der Kategorien als JSON zurück (Status: `200`).
+- /transactions `GET` optional mit ?category=<name>, ?sub_category=<name>, ?start_date=<YYYY-MM-DD>, ?end_date=<YYYY-MM-DD>:
+Ruft alle Transaktionen ab. Optional kann über die Parameter nach Kategorien und Datum gefiltert werden. 
+Nutzt dafür *transactions_service.get_transactions()*.
 - /transactions `POST`: Nimmt die Transaktionsdaten (Betrag, Kategorie, etc.) im JSON-Body entgegen und übergibt sie zur 
 Validierung und Speicherung an *transactions_service.add_transaction()*. Gibt bei Erfolg den Status `201` Created zurück.
 
@@ -417,7 +412,7 @@ Definierte REST-Endpunkte:
 sie an *budgets_service.set_budget()* weiter. Löst `409` Conflict aus, wenn das Budgetlimit bereits überschritten wurde (ValueError).
 - `GET`: Ruft die aktuelle Liste aller Budgets, inklusive berechnetem `spent` und `remaining`, vom `BudgetsService` ab.
 - /<category_name>	`DELETE`: Löscht das Budget für die angegebene Kategorie. Verwendet den Kategorienamen als 
-URL-Parameter. Delegiert an *budgets_service.delete_budget()*.
+URL-Parameter und nutzt *budgets_service.delete_budget()*.
 
 
 Zur Fehlerbehandlung wird bei fehlenden Feldern im JSON-Body (KeyError) ein `400`Bad Request zurückgegeben. Ein `409` 
@@ -438,8 +433,8 @@ Definierte REST-Endpunkte für Berichte:
 - /monthly-income-share-chart `GET`	mit ?year=<int>, ?month=<int>: Liefert ein Doughnut-Diagramm der Einnahmenanteile 
 pro Unterkategorie für den angegebenen Monat/Jahr von *reports_service.get_monthly_income_share_chart_img()*.
 - /monthly-spending-share-chart `GET` mit ?year=<int>, ?month=<int>: Liefert ein Doughnut-Diagramm der 
-Ausgabenanteile pro Kategorie für den angegebenen Monat/Jahr. Delegiert an *reports_service.get_monthly_spending_share_chart_img()*.
-- /monthly-summary `GET`: Liefert ein Liniendiagramm des Kontostandsverlaufs der letzten 30 Tage von
+Ausgabenanteile pro Kategorie für den angegebenen Monat/Jahr. Dafür wird *reports_service.get_monthly_spending_share_chart_img()* genutzt.
+- /monthly-summary `GET`: Liefert ein Liniendiagramm des Kontostandverlaufs der letzten 30 Tage von
 *reports_service.get_monthly_summary_chart_img()*.
 - /bar-chart `GET`: Liefert ein Balkendiagramm, das den aktuellen Budget-Verbrauch im Verhältnis zum Budget-Limit 
 darstellt von *reports_service.get_bar_chart_img()*.
@@ -476,8 +471,9 @@ Der TransactionsProvider wird in der Datei TransactionsContext.jsx implementiert
 *useTransactions()*. Dieser Hook stellt sicher, dass alle Komponenten effizient auf die Transaktionsdaten `transactions` 
 und die Aktualisierungsfunktion `reload: loadTransactions` zugreifen können, ohne direkt mit dem Backend interagieren zu müssen.
 Der Provider nutzt den React Hook `useEffect`, um die Funktion *loadTransactions()* beim erstmaligen Laden einer Page aufzurufen. 
-Diese Funktion führt den asynchronen fetch-Aufruf an den Backend-Endpunkt GET /api/transactions aus 
-und aktualisiert nach Empfang der JSON-Daten den lokalen Zustand.
+Die Funktion *loadTransactions* akzeptiert optional vier Parameter (category, subCategory, start_date, end_date). 
+Basierend auf diesen Parametern baut sie dynamisch die Query-String-URL für den asynchronen fetch-Aufruf an den 
+Backend-Endpunkt GET /api/transactions auf und aktualisiert nach Empfang der JSON-Daten den lokalen Zustand.
 
 #### Page-Komponenten
 
@@ -498,11 +494,14 @@ des Kontostands aktuell zu halten.
 Transactions ist die zentrale Seite zur Anzeige, Verwaltung und Filterung von Transaktionen. Um die aktuellen 
 Transaktionen zu bekommen, wird der Hook *useTransactions()* genutzt. Es wird ein fetch Request zu GET /api/categories 
 ausgeführt, um die Liste der verfügbaren Kategorien für die Filterauswahl abzurufen.
-Der Handler `handleCategoryChange` ruft die Context-Funktion *reload(category)* auf. Dies bewirkt, dass der Context 
-einen gefilterten API-Aufruf (z.B. GET /api/transactions?category=Food) sendet und den globalen Zustand des Formulars aktualisiert.
+Die Handler `handleCategoryChange`, `handleSubCategoryChange` und `handleDateChange` rufen die Context-Funktion 
+*reload()* auf. Dies bewirkt, dass der Context einen gefilterten API-Aufruf (z.B. GET /api/transactions?category=Food) 
+sendet und den Zustand des Formulars aktualisiert. Es können bis zu vier Parameter (category, subCategory, startDate, 
+endDate) an den Context übergeben werden, um eine kombinierte Filterung zu ermöglichen 
+(z.B. GET /api/transactions?sub_category=Fee&start_date=2025-10-01).
 
-Die Komponente AddTransactionForm ruft nach erfolgreicher Erstellung die *reload()*-Funktion des Contexts auf, 
-um die Liste zu aktualisieren.
+Die Komponente AddTransactionForm ruft nach erfolgreicher Erstellung einer Transaktion ebenfalls die *reload()*-Funktion 
+des Contexts auf, um die neu erstellte Transaktion in der Liste anzuzeigen.
 
 ##### - Budgets (Budgets.jsx)
 

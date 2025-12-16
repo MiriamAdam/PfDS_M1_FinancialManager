@@ -51,132 +51,94 @@ class SqliteDb:
 
             conn.commit()
 
-    def load_all_transactions(self):
+    def load_all_transactions(self, start_date=None, end_date=None):
         """
-        Retrieves all transactions from the database in descending order by date.
+        Retrieves all transactions from the database, optionally filtered by date range.
+        :param start_date: (optional) start date of a timespan
+        :param end_date: (optional) end date of a timespan
         :return: List of Transaction instances"""
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
-            cursor.execute('''
-            SELECT * FROM transactions ORDER BY date DESC''')
+            conditions = []
+            params = []
 
+            if start_date:
+                conditions.append("date >= ?")
+                params.append(start_date)
+
+            if end_date:
+                conditions.append("date <= ?")
+                params.append(end_date)
+
+            query = "SELECT * FROM transactions"
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            query += " ORDER BY date DESC"
+
+            cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
 
         return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
-    def load_transactions_by_exact_date(self, date):
+    def load_transactions_by_category(self, category_name, start_date=None, end_date=None):
         """
-        Retrieves all transactions from the database by the given date.
-
-        :param date: date of the transaction
-        :return: a list of transactions from the given date
-        """
-        with sqlite3.connect(self.db_name) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute('''
-            SELECT * FROM transactions WHERE date=?''',
-                           (date,))
-
-            rows = cursor.fetchall()
-
-        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
-
-    def load_transactions_by_date_range(self, start_date, end_date):
-        """
-        Retrieves all transactions from the database by the given date range.
-
-        :param start_date: start date of a timespan
-        :param end_date: end date of a timespan
-        :return: a list of transactions in the given date range
-        """
-        with sqlite3.connect(self.db_name) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute('''
-            SELECT * FROM transactions WHERE date>=? AND date<=?''',
-                           (start_date,end_date))
-
-            rows = cursor.fetchall()
-
-        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
-
-    def load_transactions_by_from_date(self, start_date, category_name=None):
-        """
-        Retrieves all transactions from the database from the given date onward.
-        Optional: Filters by category if category_name is given.
-
-        :param start_date: start date of a timespan
-        :param category_name: name of the category to filter
-        :return: a list of transactions starting from the given date onward
-        """
-        with sqlite3.connect(self.db_name) as conn:
-            cursor = conn.cursor()
-
-            if category_name:
-                cursor.execute('''
-                SELECT * FROM transactions WHERE date >= ? AND category_name = ?''', (start_date, category_name))
-            else:
-                cursor.execute('''
-                SELECT * FROM transactions WHERE date>=?''',
-                               (start_date,))
-
-            rows = cursor.fetchall()
-
-        return [Transaction(row[1],row[2], row[3], row[4]) for row in rows]
-
-    def load_transactions_by_until_date(self, end_date):
-        """
-        Retrieves all transactions from the database upto the given date.
-
-        :param end_date: end date of a timespan
-        :return: a list of transactions upto the given date
-        """
-        with sqlite3.connect(self.db_name) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute('''
-            SELECT * FROM transactions WHERE date<=?''',
-                           (end_date,))
-
-            rows = cursor.fetchall()
-
-        return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
-
-
-    def load_transactions_by_category(self, category_name):
-        """
-        Retrieves all transactions from the database by category.
+        Retrieves all transactions from the database by category, optionally filtered by date range.
 
         :param category_name: name of the category of the transactions
+        :param start_date: (optional) start date of a timespan
+        :param end_date: (optional) end date of a timespan
         :return: a list of transactions of the selected category
         """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
-            cursor.execute('''
-                SELECT * FROM transactions WHERE category_name = ?''',
-                           (category_name,))
+            query = "SELECT * FROM transactions WHERE category_name = ?"
+            params = [category_name]
 
+            if start_date:
+                query += " AND date>=?"
+                params.append(start_date)
+
+            if end_date:
+                query += " AND date<=?"
+                params.append(end_date)
+
+            query += " ORDER BY date DESC"
+
+            cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
 
         return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]
 
-    def load_transactions_by_sub_category(self, sub_category):
+    def load_transactions_by_sub_category(self, sub_category, start_date=None, end_date=None):
         """
-        Retrieves all transactions from the database by sub category.
+        Retrieves all transactions from the database by sub category, optionally filtered by date range.
 
         :param sub_category: sub category of the transactions
+        :param start_date: (optional) start date of a timespan
+        :param end_date: (optional) end date of a timespan
         :return: a list of transactions of the selected sub category
         """
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
 
-            cursor.execute('''
-            SELECT * FROM transactions WHERE sub_category = ?''',
-                           (sub_category,))
+            query = "SELECT * FROM transactions WHERE sub_category = ?"
+            params = [sub_category]
 
+            if start_date:
+                query += " AND date>=?"
+                params.append(start_date)
+
+            if end_date:
+                query += " AND date<=?"
+                params.append(end_date)
+
+            query += " ORDER BY date DESC"
+
+            cursor.execute(query, tuple(params))
             rows = cursor.fetchall()
 
         return [Transaction(row[1], row[2], row[3], row[4]) for row in rows]

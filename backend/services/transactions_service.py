@@ -42,7 +42,7 @@ class TransactionsService:
         budget = self.budgets_service.get_budget_for_category(category)
 
         if not category.is_income and budget:
-            current_spent = self.budgets_service.get_current_spent_amount(category_name, budget)
+            current_spent = self.budgets_service.get_current_spent_amount(category_name)
             budget.spent = current_spent
             if budget.get_remaining() - amount < 0:
                     raise ValueError(f"Budget for category {category_name} is exceeded.")
@@ -54,60 +54,25 @@ class TransactionsService:
             budget.add_expense(amount)
 
 
-    def get_transactions(self, category_name=None, as_dict=False):
+    def get_transactions(self, category_name=None, sub_category=None, start_date=None, end_date=None, as_dict=False):
         """
-        Returns a list of transaction objects of the database, optionally filtered by category.
+        Returns a list of transaction objects of the database, optionally filtered by category, sub-category and date range.
 
         :param category_name: (optional) get only transactions of the category
+        :param sub_category: (optional) get only transactions of the sub_category
+        :param start_date: (optional) start date of a timespan
+        :param end_date: (optional) end date of a timespan
         :param as_dict: (optional) if True, return a dictionary instead of a list of transactions
         :return: a list of transactions in the database
         """
         if category_name:
-            transactions = self.storage.load_transactions_by_category(category_name)
+            transactions = self.storage.load_transactions_by_category(category_name, start_date, end_date)
+        elif sub_category:
+            transactions = self.storage.load_transactions_by_sub_category(sub_category, start_date, end_date)
+        elif start_date or end_date:
+            transactions = self.storage.load_all_transactions(start_date, end_date)
         else:
             transactions = self.storage.load_all_transactions()
-
-        return self._convert_if_needed(transactions, as_dict)
-
-
-
-    def get_transactions_by_date(self, exact_date=None, start_date=None, end_date=None, as_dict=False):
-        """
-        Get transactions based on optional date filters.
-        If no parameters are provided, all transactions are returned as list of objects.
-        - exact_date: returns transactions for that specific date
-        - start_date: returns transactions from that day onward
-        - end_date: returns transactions up to that day
-        - start_date and end_date: returns transactions within the date range
-
-        :param exact_date: (optional) exact date of the transaction
-        :param start_date: (optional) start date of a timespan
-        :param end_date: (optional) end date of a timespan
-        :param as_dict: (optional) if True, return a dictionary instead of a list of transactions
-        :return: a list of transactions matching the date filters
-        """
-        if exact_date:
-            transactions = self.storage.load_transactions_by_exact_date(exact_date)
-        elif start_date and end_date:
-            transactions = self.storage.load_transactions_by_date_range(start_date, end_date)
-        elif start_date:
-            transactions = self.storage.load_transactions_by_from_date(start_date)
-        elif end_date:
-            transactions = self.storage.load_transactions_by_until_date(end_date)
-        else:
-            transactions = self.storage.load_all_transactions()
-
-        return self._convert_if_needed(transactions, as_dict)
-
-    def get_transactions_by_sub_category(self, sub_category, as_dict=False):
-        """
-        Gets a list of all transactions matching a given sub_category.
-
-        :param sub_category: sub_category of the transactions
-        :param as_dict: (optional) if True, return a dictionary instead of a list of transactions
-        :return: a list of transactions of the given sub_category
-        """
-        transactions = self.storage.load_transactions_by_sub_category(sub_category)
 
         return self._convert_if_needed(transactions, as_dict)
 

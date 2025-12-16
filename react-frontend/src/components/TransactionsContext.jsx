@@ -21,14 +21,30 @@ export function TransactionsProvider({ children }) {
 
     /**
      * Loads transactions from the backend API.
-     * Optionally filters by category if provided.
+     * Optionally filters by category or sub-category if provided.
      *
      * @param {string|null} category - Category name to filter transactions (optional)
+     * @param {string|null} sub_category - Sub-Category name to filter transactions (optional)
+     * @param {string|null} start_date - beginning of date range to filter transactions (optional)
+     * @param {string|null} end_date - end of date range to filter transactions (optional)
      */
-    const loadTransactions = (category = null) => {
+    const loadTransactions = (category = null, sub_category = null, start_date = null, end_date = null) => {
         let url = "http://localhost:5000/api/transactions";
-        if(category){
-            url = `${url}?category=${category}`;
+        const queryParams = [];
+        if(sub_category){
+            queryParams.push(`sub_category=${sub_category}`)
+        }
+        else if(category){
+            queryParams.push(`category=${category}`)
+        }
+        if (start_date){
+            queryParams.push(`start_date=${start_date}`)
+        }
+        if (end_date){
+            queryParams.push(`end_date=${end_date}`)
+        }
+        if (queryParams.length > 0) {
+        url = `${url}?${queryParams.join('&')}`;
         }
         fetch(url)
             .then(res => res.json())
@@ -40,7 +56,7 @@ export function TransactionsProvider({ children }) {
      * Load all transactions on component mount.
      */
     useEffect(() => {
-        loadTransactions();
+        loadTransactions(null, null, null, null);
     }, []);
 
     return (

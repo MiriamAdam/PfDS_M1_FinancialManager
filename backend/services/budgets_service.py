@@ -59,7 +59,7 @@ class BudgetsService:
         :param category: the category of the budget
         """
         first_of_month = datetime(datetime.now().year, datetime.now().month, 1)
-        transactions = self.storage.load_transactions_by_from_date(first_of_month, category)
+        transactions = self.storage.load_transactions_by_category(category, start_date=first_of_month)
         sum_spent = 0
         for t in transactions:
             category = Category.from_category_as_string(t.category_name)
@@ -79,7 +79,7 @@ class BudgetsService:
 
         category = Category.from_category_as_string(category_name)
         first_day_of_month = datetime(datetime.now().year, datetime.now().month, 1)
-        transactions = self.storage.load_transactions_by_from_date(first_day_of_month, category_name)
+        transactions = self.storage.load_transactions_by_category(category_name, start_date=first_day_of_month)
         amount_already_spent = sum(t.amount for t in transactions)
         if amount_already_spent <= limit:
             self.budgets[category] = Budget(category, limit, amount_already_spent)
