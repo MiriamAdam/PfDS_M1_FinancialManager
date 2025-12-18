@@ -1,9 +1,9 @@
 # Aufgabe 1 - Applikation: Finanzmanager
 
-Die Finanzmanager-Anwendung wurde von Miriam Adam im Rahmen des Wahlpflichtmoduls "Einführung in Python for Data Science" 
-im Wintersemester 2025/2026 an der Hochschule Bremen erstellt. Sie ist Teil von drei Aufgaben, die als erster Meilenstein 
-des Moduls innerhalb von sechs Wochen in Dreiergruppen bearbeitet werden sollte. Unserer Gruppe hat sich nach längerem 
-Überlegen dazu entschieden, dass jede Person alleine eine Aufgabe bearbeitet. 
+Die Finanzmanager-Anwendung wurde von Miriam Adam im Rahmen des Wahlpflichtmoduls "Einführung in Python for Data Science"
+unter Leitung von Dr.-Ing. Mustafa Awd und Alexander Wolotschai im Wintersemester 2025/2026 an der Hochschule Bremen erstellt. 
+Sie ist Teil von drei Aufgaben, die als erster Meilenstein des Moduls innerhalb von sechs Wochen in Dreiergruppen bearbeitet 
+werden sollte. Unserer Gruppe hat sich nach längerem Überlegen dazu entschieden, dass jede Person alleine eine Aufgabe bearbeitet. 
 
 Ziel dieser Aufgabe war es, einen persönlichen Finanzmanager zu entwickeln, der Nutzer*innen dabei hilft, seine/ihre 
 Finanzen im Überblick zu behalten. Dabei soll er die Möglichkeit bieten, Einnahmen und Ausgaben zu erfassen, zu 
